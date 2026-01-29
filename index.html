@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Uniformes 2026</title>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <style>
+        /* DESIGN MODERNO (WEB 2.0) - DE VOLTA AO VISUAL BONITO */
+        :root { --primary: #004e92; --secondary: #000428; --accent: #00a8cc; --bg: #eef2f3; }
+        body { font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif; background: linear-gradient(to right, #eef2f3, #8e9eab); padding: 30px; margin: 0; color: #333; }
+        
+        .main-container { max-width: 1100px; margin: 0 auto; }
+        
+        h1 { text-align: center; color: var(--secondary); margin-bottom: 40px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .cards-wrapper { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 30px; }
+        
+        .card { 
+            flex: 1; min-width: 320px; background: white; padding: 30px; border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); transition: transform 0.3s ease;
+        }
+        .card:hover { transform: translateY(-5px); }
+        
+        h2 { color: var(--primary); border-bottom: 2px solid var(--accent); padding-bottom: 10px; margin-top: 0; font-size: 1.2rem; }
+        
+        label { display: block; margin-top: 15px; font-weight: 600; font-size: 0.9rem; color: #555; }
+        select { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; background-color: #fafafa; outline: none; transition: 0.3s; }
+        select:focus { border-color: var(--primary); background-color: white; }
+        
+        .info-box { 
+            margin-top: 15px; padding: 15px; background: #e0f7fa; border-radius: 8px; 
+            color: #006064; font-size: 0.9rem; border-left: 5px solid var(--accent); display: none; 
+            animation: fadeIn 0.5s;
+        }
+
+        .btn-add { 
+            width: 100%; padding: 15px; background: linear-gradient(45deg, var(--primary), var(--secondary)); 
+            color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; 
+            margin-top: 25px; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px; 
+        }
+        .btn-add:hover { box-shadow: 0 5px 15px rgba(0, 78, 146, 0.4); filter: brightness(1.1); }
+        .btn-add:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
+
+        /* ÁREA DA TABELA */
+        .table-card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        thead tr { background-color: var(--primary); color: white; text-align: left; }
+        th, td { padding: 15px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.95rem; }
+        tbody tr:hover { background-color: #f9f9f9; }
+
+        .btn-remove { 
+            background-color: #ff416c; color: white; border: none; padding: 8px 12px; 
+            border-radius: 5px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; 
+        }
+        .btn-remove:hover { background-color: #c0392b; }
+
+        .btn-excel { 
+            background-color: #11998e; color: white; padding: 15px 30px; border: none; 
+            border-radius: 8px; font-weight: bold; cursor: pointer; float: right; margin-top: 20px; 
+            font-size: 1rem; display: flex; align-items: center; gap: 10px;
+        }
+        .btn-excel:hover { background-color: #0e8c82; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <h1>Controle de Uniformes 2026</h1>
+
+    <div class="cards-wrapper">
+        <div class="card">
+            <h2>1. Colaborador</h2>
+            <label>Selecione o Nome:</label>
+            <select id="selectAluno" onchange="mostrarInfoAluno()">
+                <option value="">-- Selecione --</option>
+            </select>
+            <div id="displayAluno" class="info-box"></div>
+        </div>
+
+        <div class="card">
+            <h2>2. Uniforme</h2>
+            
+            <label>Peça:</label>
+            <select id="tipoPeca" onchange="carregarTamanhos()">
+                <option value="">-- Selecione o Item --</option>
+            </select>
+
+            <label>Tamanho:</label>
+            <select id="tamanhoPeca" disabled onchange="atualizarInfoPeca()">
+                <option value="">Selecione a peça primeiro</option>
+            </select>
+
+            <div id="displayPeca" class="info-box"></div>
+
+            <label>Quantidade:</label>
+            <select id="qtdPeca" disabled>
+                <option value="">-</option>
+            </select>
+
+            <button id="btnAdd" class="btn-add" onclick="adicionarItem()" disabled>Adicionar à Lista</button>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <h2>Itens Lançados (Ordem Alfabética)</h2>
+        <table id="tabelaSite">
+            <thead>
+                <tr>
+                    <th>Nome do Colaborador</th>
+                    <th>Cód. Aluno</th>
+                    <th>Cód. Centro Custo</th>
+                    <th>Peça (Código)</th>
+                    <th>Quantidade</th>
+                    <th>Remover</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        
+        <button class="btn-excel" onclick="gerarExcel()">
+            <span>📥 Baixar Excel (Padrão MBB)</span>
+        </button>
+        <div style="clear: both;"></div>
+    </div>
+</div>
+
+<script>
+    // --- 1. SEUS DADOS ---
+    const alunos = [
+        { nome: "Ana Clara Carvalhal Gomes", codigo: "ALU-001" },
+        { nome: "Ana Julia Xavier Martins", codigo: "ALU-002" },
+        { nome: "Beatriz Dos Santos Nogueira", codigo: "ALU-003" },
+        { nome: "Enzo Lima Rodovalho", codigo: "ALU-004" },
+        { nome: "Guilherme Dos Santos Bueno", codigo: "ALU-005" },
+        { nome: "Gustavo Da Silva Rodrigues", codigo: "ALU-006" },
+        { nome: "Gustavo Gonçalves Silva", codigo: "ALU-007" },
+        { nome: "Heitor Gonçalves Fernandes", codigo: "ALU-008" },
+        { nome: "Hitalo Rodrigues Da Mata", codigo: "ALU-009" },
+        { nome: "Julia Nagima Silva", codigo: "ALU-010" },
+        { nome: "Luara Santos Neves Pinas", codigo: "ALU-011" },
+        { nome: "Manuela De Sousa Frias", codigo: "ALU-012" },
+        { nome: "Mauricio Lima Martins", codigo: "ALU-013" },
+        { nome: "Pedro Dias De Oliveira", codigo: "ALU-014" },
+        { nome: "Raphael Almeida Bomfim", codigo: "ALU-015" },
+        { nome: "Vinicíus De Morais Dias", codigo: "ALU-016" }
+    ];
+
+    const catalogo = {
+        "Camisa Polo": {
+            limite: 3,
+            tamanhos: { "P": "B09990435", "M": "B09990436", "G": "B09990437", "GG": "B09990438", "SGG": "B09990439", "EXG": "B09990440" }
+        },
+        "Bermuda": {
+            limite: 2,
+            tamanhos: { "36": "B09991521", "40": "B09991522", "44": "B09991523", "48": "B09991524", "52": "B09991525", "56": "B09991526", "60": "B09991527" }
+        },
+        "Calça Masculina": {
+            limite: 3,
+            tamanhos: { "36": "B09991539", "38": "B09991540", "40": "B09991541", "42": "B09991542", "44": "B09991543", "46": "B09991544", "48": "B09991545", "50": "B09991546", "52": "B09991146", "54": "B09991547", "56": "B09991548", "60": "B09991549" }
+        },
+        "Calça Feminina": {
+            limite: 3,
+            tamanhos: { "32": "B09991550", "34": "B09991551", "36": "B09991552", "38": "B09991553", "40": "B09991554", "42": "B09991555", "44": "B09991556", "46": "B09991557", "48": "B09991558", "50": "B09991559", "52": "B09991560", "54": "B09991561" }
+        },
+        "Blusa Moleton": {
+            limite: 1,
+            tamanhos: { "P": "B09990200", "M": "B09990201", "G": "B09990202", "GG": "B09990203", "EX": "B09990204" }
+        },
+        "Meia": {
+            limite: 6,
+            tamanhos: { "Masculina": "B09992580", "Feminina": "B09992780" }
+        }
+    };
+
+    let listaExportacao = [];
+    const CENTRO_CUSTO = "4694"; // VALOR FIXO SOLICITADO
+
+    // --- 2. INICIALIZAÇÃO ---
+    window.onload = function() {
+        const selAluno = document.getElementById('selectAluno');
+        alunos.forEach((aluno, index) => {
+            const opt = document.createElement('option');
+            opt.value = index;
+            opt.text = aluno.nome;
+            selAluno.appendChild(opt);
+        });
+
+        const selTipo = document.getElementById('tipoPeca');
+        for (let item in catalogo) {
+            const opt = document.createElement('option');
+            opt.value = item;
+            opt.text = item;
+            selTipo.appendChild(opt);
+        }
+    };
+
+    // --- 3. LÓGICA DE INTERFACE ---
+    function mostrarInfoAluno() {
+        const idx = document.getElementById('selectAluno').value;
+        const display = document.getElementById('displayAluno');
+        
+        if (idx !== "") {
+            display.style.display = 'block';
+            display.innerHTML = `Código do Aluno: <strong>${alunos[idx].codigo}</strong>`;
+        } else {
+            display.style.display = 'none';
+        }
+    }
+
+    function carregarTamanhos() {
+        const tipo = document.getElementById('tipoPeca').value;
+        const selTam = document.getElementById('tamanhoPeca');
+        const selQtd = document.getElementById('qtdPeca');
+        const btn = document.getElementById('btnAdd');
+        
+        selTam.innerHTML = '<option value="">-- Selecione Tamanho --</option>';
+        selQtd.innerHTML = '<option value="">-</option>';
+        selQtd.disabled = true;
+        selTam.disabled = true;
+        btn.disabled = true;
+        document.getElementById('displayPeca').style.display = 'none';
+
+        if (tipo && catalogo[tipo]) {
+            selTam.disabled = false;
+            const tamList = catalogo[tipo].tamanhos;
+            for (let t in tamList) {
+                const opt = document.createElement('option');
+                opt.value = t;
+                opt.text = t;
+                selTam.appendChild(opt);
+            }
+        }
+    }
+
+    function atualizarInfoPeca() {
+        const tipo = document.getElementById('tipoPeca').value;
+        const tam = document.getElementById('tamanhoPeca').value;
+        const display = document.getElementById('displayPeca');
+        const selQtd = document.getElementById('qtdPeca');
+        const btn = document.getElementById('btnAdd');
+
+        if (tipo && tam) {
+            const dadosItem = catalogo[tipo];
+            const codigo = dadosItem.tamanhos[tam];
+            const maxQtd = dadosItem.limite;
+
+            display.style.display = 'block';
+            display.innerHTML = `Código do Item: <strong>${codigo}</strong><br>Limite Máximo: ${maxQtd}`;
+
+            selQtd.innerHTML = '';
+            for (let i = 1; i <= maxQtd; i++) {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.text = i;
+                selQtd.appendChild(opt);
+            }
+            selQtd.disabled = false;
+            btn.disabled = false;
+        }
+    }
+
+    function adicionarItem() {
+        const idxAluno = document.getElementById('selectAluno').value;
+        const tipo = document.getElementById('tipoPeca').value;
+        const tam = document.getElementById('tamanhoPeca').value;
+        const qtd = document.getElementById('qtdPeca').value;
+
+        if (idxAluno === "" || tipo === "" || tam === "") return alert("Preencha todos os campos.");
+
+        const alunoObj = alunos[idxAluno];
+        const codigoPeca = catalogo[tipo].tamanhos[tam];
+
+        // Adiciona à lista
+        listaExportacao.push({
+            id: Date.now(),
+            nomeAluno: alunoObj.nome, // Usado para ordenar
+            codAluno: alunoObj.codigo,
+            codPeca: codigoPeca,
+            quantidade: parseInt(qtd)
+        });
+
+        atualizarTabelaVisual();
+        
+        const btn = document.getElementById('btnAdd');
+        btn.innerText = "ADICIONADO COM SUCESSO! ✔";
+        setTimeout(() => btn.innerText = "Adicionar à Lista", 1000);
+    }
+
+    function removerItem(id) {
+        listaExportacao = listaExportacao.filter(item => item.id !== id);
+        atualizarTabelaVisual();
+    }
+
+    function atualizarTabelaVisual() {
+        const tbody = document.querySelector("#tabelaSite tbody");
+        tbody.innerHTML = "";
+
+        // ORDENAÇÃO ALFABÉTICA AUTOMÁTICA
+        listaExportacao.sort((a, b) => a.nomeAluno.localeCompare(b.nomeAluno));
+
+        if(listaExportacao.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='6' style='color:#999; padding: 20px;'>Nenhum item adicionado ainda.</td></tr>";
+            return;
+        }
+
+        listaExportacao.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${item.nomeAluno}</td>
+                <td><strong>${item.codAluno}</strong></td>
+                <td>${CENTRO_CUSTO}</td>
+                <td>${item.codPeca}</td>
+                <td>${item.quantidade}</td>
+                <td><button class="btn-remove" onclick="removerItem(${item.id})">Remover</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // --- 4. EXPORTAÇÃO EXCEL IDÊNTICA AO MODELO MBB ---
+    function gerarExcel() {
+        if (listaExportacao.length === 0) return alert("A lista está vazia!");
+
+        // Garante a ordenação antes de gerar o arquivo
+        listaExportacao.sort((a, b) => a.nomeAluno.localeCompare(b.nomeAluno));
+
+        // Mapeia para o formato EXATO do arquivo enviado
+        // As chaves do objeto abaixo (ex: "Oper") são os cabeçalhos da coluna do Excel
+        const dadosExcel = listaExportacao.map(item => ({
+            "Oper": "",                        // Coluna A (Vazia)
+            "Reg. Solicitante": item.codAluno, // Coluna B
+            "Reg. Responsavel": "",            // Coluna C (Vazia)
+            "C.C. Solicitante": CENTRO_CUSTO,  // Coluna D (Fixo 4694)
+            "Almo (DACC)": "",                 // Coluna E (Vazia)
+            "Numero do Item": item.codPeca,    // Coluna F
+            "Quantidade": item.quantidade,     // Coluna G
+            "Clas Contabil TD": "",            // Coluna H (Vazia)
+            "Clas Contabil2": CENTRO_CUSTO,    // Coluna I (Fixo 4694)
+            "Clas Contabil Id": "",            // Coluna J (Vazia)
+            "Observação": ""                   // Coluna K (Vazia)
+        }));
+
+        // Cria a planilha
+        const wb = XLSX.utils.book_new();
+        
+        // Converte os dados, forçando a ordem das colunas
+        const ws = XLSX.utils.json_to_sheet(dadosExcel, {
+            header: [
+                "Oper", "Reg. Solicitante", "Reg. Responsavel", "C.C. Solicitante", 
+                "Almo (DACC)", "Numero do Item", "Quantidade", "Clas Contabil TD", 
+                "Clas Contabil2", "Clas Contabil Id", "Observação"
+            ]
+        });
+        
+        // Ajusta largura das colunas para ficar parecido com o original
+        ws['!cols'] = [
+            {wch: 8}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 12}, 
+            {wch: 20}, {wch: 12}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 30}
+        ];
+
+        XLSX.utils.book_append_sheet(wb, ws, "Requisicoes_SIL_AEPI"); // Nome da aba igual ao original
+        XLSX.writeFile(wb, "Requisicao_Uniforme_MBB.xlsx");
+    }
+</script>
+
+</body>
+</html>

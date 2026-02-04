@@ -2,213 +2,319 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Uniformes 2026</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gestão de EPIs 2026 - Acesso Restrito</title>
+    
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    
     <style>
-        /* DESIGN MODERNO (WEB 2.0) - DE VOLTA AO VISUAL BONITO */
-        :root { --primary: #004e92; --secondary: #000428; --accent: #00a8cc; --bg: #eef2f3; }
-        body { font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif; background: linear-gradient(to right, #eef2f3, #8e9eab); padding: 30px; margin: 0; color: #333; }
+        /* ESTILOS VISUAIS */
+        :root { --primary: #004e92; --secondary: #000428; --accent: #00a8cc; --bg: #eef2f3; --success: #27ae60; --danger: #c0392b; }
+        * { box-sizing: border-box; outline: none; }
+        body { font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif; background: linear-gradient(135deg, #eef2f3 0%, #8e9eab 100%); padding: 20px; margin: 0; color: #333; min-height: 100vh; }
         
-        .main-container { max-width: 1100px; margin: 0 auto; }
+        .main-container { max-width: 1200px; margin: 0 auto; padding-bottom: 50px; display: none; /* Escondido por padrão */ }
         
-        h1 { text-align: center; color: var(--secondary); margin-bottom: 40px; text-transform: uppercase; letter-spacing: 1px; }
+        /* TELA DE LOGIN */
+        #loginScreen {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 90vh; text-align: center;
+        }
+        .login-card {
+            background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 400px; width: 100%;
+        }
+        .btn-google {
+            background-color: #db4437; color: white; padding: 15px 25px; border-radius: 50px;
+            border: none; font-size: 1rem; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; transition: transform 0.2s; box-shadow: 0 4px 10px rgba(219, 68, 55, 0.3);
+        }
+        .btn-google:hover { transform: scale(1.03); background-color: #c53929; }
 
+        /* HEADER E PERFIL */
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
+        h1 { color: var(--secondary); margin: 0; text-transform: uppercase; letter-spacing: 1px; font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
+        
+        .user-profile { display: flex; align-items: center; gap: 10px; background: white; padding: 5px 15px 5px 5px; border-radius: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .user-avatar { width: 35px; height: 35px; border-radius: 50%; }
+        .user-name { font-size: 0.9rem; font-weight: bold; color: var(--primary); }
+        .btn-logout { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.2rem; margin-left: 10px; }
+
+        /* ESTILOS DO SISTEMA (MANTIDOS) */
+        .btn-dashboard { background-color: var(--secondary); color: white; padding: 10px 20px; border-radius: 30px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .btn-dashboard:hover { transform: scale(1.05); background-color: var(--primary); }
         .cards-wrapper { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 30px; }
-        
-        .card { 
-            flex: 1; min-width: 320px; background: white; padding: 30px; border-radius: 15px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); transition: transform 0.3s ease;
-        }
-        .card:hover { transform: translateY(-5px); }
-        
-        h2 { color: var(--primary); border-bottom: 2px solid var(--accent); padding-bottom: 10px; margin-top: 0; font-size: 1.2rem; }
-        
-        label { display: block; margin-top: 15px; font-weight: 600; font-size: 0.9rem; color: #555; }
-        select { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; background-color: #fafafa; outline: none; transition: 0.3s; }
+        .card { flex: 1; min-width: 300px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); transition: transform 0.3s ease; border-top: 5px solid var(--primary); }
+        h2 { color: var(--primary); margin-top: 0; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        label { display: block; margin-top: 15px; font-weight: 600; font-size: 0.85rem; color: #555; text-transform: uppercase; }
+        select, input { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; background-color: #fafafa; transition: 0.3s; }
         select:focus { border-color: var(--primary); background-color: white; }
-        
-        .info-box { 
-            margin-top: 15px; padding: 15px; background: #e0f7fa; border-radius: 8px; 
-            color: #006064; font-size: 0.9rem; border-left: 5px solid var(--accent); display: none; 
-            animation: fadeIn 0.5s;
-        }
-
-        .btn-add { 
-            width: 100%; padding: 15px; background: linear-gradient(45deg, var(--primary), var(--secondary)); 
-            color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; 
-            margin-top: 25px; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px; 
-        }
-        .btn-add:hover { box-shadow: 0 5px 15px rgba(0, 78, 146, 0.4); filter: brightness(1.1); }
-        .btn-add:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
-
-        /* ÁREA DA TABELA */
-        .table-card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .info-box { margin-top: 15px; padding: 12px; background: #e0f7fa; border-radius: 8px; color: #006064; font-size: 0.9rem; border-left: 4px solid var(--accent); display: none; }
+        .btn-add { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 25px; transition: all 0.3s; }
+        .btn-add:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-add:hover:not(:disabled) { background: var(--secondary); }
+        .btn-send-email { background: linear-gradient(to right, #11998e, #38ef7d); color: white; padding: 15px 30px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; float: right; margin-top: 20px; font-size: 1rem; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3); }
+        .btn-send-email:hover { transform: translateY(-2px); }
+        .btn-send-email:disabled { background: #ccc; transform: none; box-shadow: none; cursor: not-allowed; }
+        .table-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        .table-responsive { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; white-space: nowrap; }
         thead tr { background-color: var(--primary); color: white; text-align: left; }
-        th, td { padding: 15px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.95rem; }
-        tbody tr:hover { background-color: #f9f9f9; }
-
-        .btn-remove { 
-            background-color: #ff416c; color: white; border: none; padding: 8px 12px; 
-            border-radius: 5px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; 
-        }
-        .btn-remove:hover { background-color: #c0392b; }
-
-        .btn-excel { 
-            background-color: #11998e; color: white; padding: 15px 30px; border: none; 
-            border-radius: 8px; font-weight: bold; cursor: pointer; float: right; margin-top: 20px; 
-            font-size: 1rem; display: flex; align-items: center; gap: 10px;
-        }
-        .btn-excel:hover { background-color: #0e8c82; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        th, td { padding: 12px 15px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.9rem; }
+        .btn-remove { background-color: #ffdde1; color: var(--danger); border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-content { background: white; width: 95%; max-width: 900px; max-height: 90vh; border-radius: 15px; padding: 30px; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.2); position: relative; }
+        .close-modal { position: absolute; top: 20px; right: 20px; font-size: 1.5rem; color: #999; cursor: pointer; }
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
+        .status-none { background: #eee; color: #777; }
+        .status-coord { background: #fff3cd; color: #856404; }
+        .status-spec { background: #d1ecf1; color: #0c5460; }
+        .status-almox { background: #f8d7da; color: #721c24; }
+        .status-done { background: #d4edda; color: #155724; }
+        .btn-advance { background: var(--primary); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.75rem; }
+        
+        #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 2000; justify-content: center; align-items: center; flex-direction: column; text-align: center; }
+        .spinner { border: 8px solid #f3f3f3; border-top: 8px solid var(--primary); border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .error-log { margin-top:20px; padding:15px; background:#f8d7da; color:#721c24; border-radius:8px; font-size:0.85rem; max-width:80%; word-break:break-all; display:none; }
     </style>
 </head>
 <body>
 
-<div class="main-container">
-    <h1>Controle de Uniformes 2026</h1>
+<div id="loadingOverlay">
+    <div class="spinner"></div>
+    <h3 style="color: var(--primary); margin-top: 20px;">Carregando...</h3>
+    <div id="errorDisplay" class="error-log"></div>
+    <button id="btnCloseError" style="display:none; margin-top:10px;" onclick="document.getElementById('loadingOverlay').style.display='none'">Fechar</button>
+</div>
+
+<div id="loginScreen">
+    <div class="login-card">
+        <h1 style="justify-content: center; margin-bottom: 20px;"><i class="fa-solid fa-helmet-safety"></i> Gestão EPI</h1>
+        <p style="color: #666; margin-bottom: 30px;">Faça login com sua conta institucional ou Google para acessar o sistema.</p>
+        <button class="btn-google" onclick="fazerLoginGoogle()">
+            <i class="fa-brands fa-google"></i> Entrar com Google
+        </button>
+    </div>
+</div>
+
+<div class="main-container" id="appContent">
+    <header>
+        <h1><i class="fa-solid fa-helmet-safety"></i> Controle 2026</h1>
+        
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <button class="btn-dashboard" onclick="abrirDashboard()">
+                <i class="fa-solid fa-list-check"></i> Status
+            </button>
+            
+            <div class="user-profile">
+                <img src="" id="userAvatar" class="user-avatar" alt="Avatar">
+                <span id="userName" class="user-name">Usuário</span>
+                <button class="btn-logout" onclick="fazerLogout()" title="Sair">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+        </div>
+    </header>
 
     <div class="cards-wrapper">
         <div class="card">
-            <h2>1. Colaborador</h2>
-            <label>Selecione o Nome:</label>
-            <select id="selectAluno" onchange="mostrarInfoAluno()">
-                <option value="">-- Selecione --</option>
-            </select>
+            <h2><i class="fa-solid fa-user-tag"></i> 1. Identificação</h2>
+            <label>Turno:</label>
+            <select id="selectTurno" onchange="carregarTurmas()"><option value="">-- Selecione o Turno --</option><option value="M">Manhã (Turmas M)</option><option value="T">Tarde (Turmas T)</option></select>
+            <label>Turma:</label>
+            <select id="selectTurma" disabled onchange="carregarAlunos()"><option value="">Selecione o turno primeiro</option></select>
+            <label>Aluno:</label>
+            <select id="selectAluno" disabled onchange="mostrarInfoAluno()"><option value="">Selecione a turma primeiro</option></select>
             <div id="displayAluno" class="info-box"></div>
         </div>
 
         <div class="card">
-            <h2>2. Uniforme</h2>
-            
-            <label>Peça:</label>
-            <select id="tipoPeca" onchange="carregarTamanhos()">
-                <option value="">-- Selecione o Item --</option>
-            </select>
-
-            <label>Tamanho:</label>
-            <select id="tamanhoPeca" disabled onchange="atualizarInfoPeca()">
-                <option value="">Selecione a peça primeiro</option>
-            </select>
-
+            <h2><i class="fa-solid fa-shirt"></i> 2. Material</h2>
+            <label>Item:</label>
+            <select id="tipoPeca" onchange="carregarTamanhos()"><option value="">-- Selecione o Item --</option></select>
+            <label>Tamanho/Opção:</label>
+            <select id="tamanhoPeca" disabled onchange="atualizarInfoPeca()"><option value="">Selecione o item</option></select>
             <div id="displayPeca" class="info-box"></div>
-
             <label>Quantidade:</label>
-            <select id="qtdPeca" disabled>
-                <option value="">-</option>
-            </select>
-
-            <button id="btnAdd" class="btn-add" onclick="adicionarItem()" disabled>Adicionar à Lista</button>
+            <select id="qtdPeca" disabled><option value="">-</option></select>
+            <button id="btnAdd" class="btn-add" onclick="adicionarItem()" disabled><i class="fa-solid fa-plus"></i> Adicionar à Lista</button>
         </div>
     </div>
 
     <div class="table-card">
-        <h2>Itens Lançados (Ordem Alfabética)</h2>
-        <table id="tabelaSite">
-            <thead>
-                <tr>
-                    <th>Nome do Colaborador</th>
-                    <th>Cód. Aluno</th>
-                    <th>Cód. Centro Custo</th>
-                    <th>Peça (Código)</th>
-                    <th>Quantidade</th>
-                    <th>Remover</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-        
-        <button class="btn-excel" onclick="gerarExcel()">
-            <span>📥 Baixar Excel (Padrão MBB)</span>
-        </button>
+        <h2>Itens na Lista</h2>
+        <div class="table-responsive">
+            <table id="tabelaSite">
+                <thead><tr><th>Turma</th><th>Aluno (Reg)</th><th>Item (B09...)</th><th>Qtd</th><th>Ação</th></tr></thead>
+                <tbody><tr><td colspan='5' style='color:#999; padding:20px;'>Nenhum item adicionado ainda.</td></tr></tbody>
+            </table>
+        </div>
+        <button id="btnSend" class="btn-send-email" onclick="enviarEmailReal()"><i class="fa-solid fa-paper-plane"></i> Enviar Tabela (Padrão Sistema)</button>
         <div style="clear: both;"></div>
     </div>
 </div>
 
+<div class="modal-overlay" id="dashboardModal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="fecharDashboard()">&times;</span>
+        <h2 style="color: var(--secondary);">Status das Solicitações</h2>
+        <div class="table-responsive">
+            <table id="tabelaStatus">
+                <thead><tr><th>Turma</th><th>Status</th><th>Última Atualização</th><th>Ação</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <script>
-    // --- 1. SEUS DADOS ---
-    const alunos = [
-        { nome: "Ana Clara Carvalhal Gomes", codigo: "ALU-001" },
-        { nome: "Ana Julia Xavier Martins", codigo: "ALU-002" },
-        { nome: "Beatriz Dos Santos Nogueira", codigo: "ALU-003" },
-        { nome: "Enzo Lima Rodovalho", codigo: "ALU-004" },
-        { nome: "Guilherme Dos Santos Bueno", codigo: "ALU-005" },
-        { nome: "Gustavo Da Silva Rodrigues", codigo: "ALU-006" },
-        { nome: "Gustavo Gonçalves Silva", codigo: "ALU-007" },
-        { nome: "Heitor Gonçalves Fernandes", codigo: "ALU-008" },
-        { nome: "Hitalo Rodrigues Da Mata", codigo: "ALU-009" },
-        { nome: "Julia Nagima Silva", codigo: "ALU-010" },
-        { nome: "Luara Santos Neves Pinas", codigo: "ALU-011" },
-        { nome: "Manuela De Sousa Frias", codigo: "ALU-012" },
-        { nome: "Mauricio Lima Martins", codigo: "ALU-013" },
-        { nome: "Pedro Dias De Oliveira", codigo: "ALU-014" },
-        { nome: "Raphael Almeida Bomfim", codigo: "ALU-015" },
-        { nome: "Vinicíus De Morais Dias", codigo: "ALU-016" }
+    // =========================================================================
+    // 1. CONFIGURAÇÃO FIREBASE E EMAILJS (ATENÇÃO AQUI)
+    // =========================================================================
+    
+    // --- COLE AS CHAVES DO FIREBASE AQUI ---
+    // (Pegue no Console Firebase > Configurações do Projeto > Geral > Seus aplicativos > Web)
+    const firebaseConfig = {
+        apiKey: "AIzaSyA0v_e_jug-LitdrSSechKrCmXAKaBA00o",
+        authDomain: "gestaoepi-bc265.firebaseapp.com",
+        projectId: "gestaoepi-bc265",
+        storageBucket: "gestaoepi-bc265.firebasestorage.app",
+        messagingSenderId: "100298795455",
+        appId: "1:100298795455:web:85398ec8b014790ae9590a"
+    };
+
+    // --- COLE AS CHAVES DO EMAILJS AQUI ---
+    const EMAIL_SERVICE_ID = "service_2tp3jlm"; 
+    const EMAIL_TEMPLATE_ID = "template_5kplq56"; 
+    const EMAIL_PUBLIC_KEY = "zDXgHHECIycy13U3H"; 
+
+    // Inicialização
+    let auth;
+    try {
+        firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        emailjs.init(EMAIL_PUBLIC_KEY);
+    } catch(e) { console.error("Erro na inicialização:", e); }
+
+    // =========================================================================
+    // 2. SISTEMA DE LOGIN (AUTH)
+    // =========================================================================
+    
+    // Verifica se já está logado ao abrir a página
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            // Usuário logado: Mostra o sistema
+            console.log("Logado como:", user.email);
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appContent').style.display = 'block';
+            
+            // Preenche dados do perfil
+            document.getElementById('userName').innerText = user.displayName || user.email;
+            document.getElementById('userAvatar').src = user.photoURL || "https://ui-avatars.com/api/?name=" + user.email;
+        } else {
+            // Não logado: Mostra tela de login
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('appContent').style.display = 'none';
+        }
+    });
+
+    function fazerLoginGoogle() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider)
+            .catch(error => {
+                alert("Erro ao fazer login: " + error.message);
+            });
+    }
+
+    function fazerLogout() {
+        auth.signOut().then(() => {
+            alert("Você saiu do sistema.");
+            location.reload();
+        });
+    }
+
+    // =========================================================================
+    // 3. DADOS E LÓGICA DO SISTEMA (Tudo igual ao anterior)
+    // =========================================================================
+    const CENTRO_CUSTO = "9464"; 
+    
+    const alunosT1A = [
+        { nome: "Ana Clara Carvalhal Gomes", codigo: "8001" }, { nome: "Ana Julia Xavier Martins", codigo: "8002" }, { nome: "Beatriz Dos Santos Nogueira", codigo: "8003" }, { nome: "Enzo Lima Rodovalho", codigo: "8004" }, { nome: "Guilherme Dos Santos Bueno", codigo: "8005" }, { nome: "Gustavo Da Silva Rodrigues", codigo: "8006" }, { nome: "Gustavo Gonçalves Silva", codigo: "8007" }, { nome: "Heitor Gonçalves Fernandes", codigo: "8008" }, { nome: "Hitalo Rodrigues Da Mata", codigo: "8009" }, { nome: "Julia Nagima Silva", codigo: "8010" }, { nome: "Luara Santos Neves Pinas", codigo: "8011" }, { nome: "Manuela De Sousa Frias", codigo: "8012" }, { nome: "Mauricio Lima Martins", codigo: "8013" }, { nome: "Pedro Dias De Oliveira", codigo: "8014" }, { nome: "Raphael Almeida Bomfim", codigo: "8015" }, { nome: "Vinicíus De Morais Dias", codigo: "8016" }
     ];
 
+    const bancoAlunos = { "T1A": alunosT1A };
+    function gerarTurmaGenerica(nomeTurma, inicioCodigo) { let lista = []; for(let i=1; i<=16; i++) { lista.push({ nome: `Aluno ${i} da ${nomeTurma}`, codigo: `${inicioCodigo + i}` }); } return lista; }
+
+    bancoAlunos["T1B"] = gerarTurmaGenerica("T1B", 8100); bancoAlunos["T1C"] = gerarTurmaGenerica("T1C", 8200); bancoAlunos["M2A"] = gerarTurmaGenerica("M2A", 8300); bancoAlunos["M2B"] = gerarTurmaGenerica("M2B", 8400); bancoAlunos["M2C"] = gerarTurmaGenerica("M2C", 8500); bancoAlunos["T3A"] = gerarTurmaGenerica("T3A", 8600); bancoAlunos["T3B"] = gerarTurmaGenerica("T3B", 8700); bancoAlunos["T3C"] = gerarTurmaGenerica("T3C", 8800); bancoAlunos["M4A"] = gerarTurmaGenerica("M4A", 8900); bancoAlunos["M4B"] = gerarTurmaGenerica("M4B", 9000); bancoAlunos["M4C"] = gerarTurmaGenerica("M4C", 9100);
+
     const catalogo = {
-        "Camisa Polo": {
-            limite: 3,
-            tamanhos: { "P": "B09990435", "M": "B09990436", "G": "B09990437", "GG": "B09990438", "SGG": "B09990439", "EXG": "B09990440" }
-        },
-        "Bermuda": {
-            limite: 2,
-            tamanhos: { "36": "B09991521", "40": "B09991522", "44": "B09991523", "48": "B09991524", "52": "B09991525", "56": "B09991526", "60": "B09991527" }
-        },
-        "Calça Masculina": {
-            limite: 3,
-            tamanhos: { "36": "B09991539", "38": "B09991540", "40": "B09991541", "42": "B09991542", "44": "B09991543", "46": "B09991544", "48": "B09991545", "50": "B09991546", "52": "B09991146", "54": "B09991547", "56": "B09991548", "60": "B09991549" }
-        },
-        "Calça Feminina": {
-            limite: 3,
-            tamanhos: { "32": "B09991550", "34": "B09991551", "36": "B09991552", "38": "B09991553", "40": "B09991554", "42": "B09991555", "44": "B09991556", "46": "B09991557", "48": "B09991558", "50": "B09991559", "52": "B09991560", "54": "B09991561" }
-        },
-        "Blusa Moleton": {
-            limite: 1,
-            tamanhos: { "P": "B09990200", "M": "B09990201", "G": "B09990202", "GG": "B09990203", "EX": "B09990204" }
-        },
-        "Meia": {
-            limite: 6,
-            tamanhos: { "Masculina": "B09992580", "Feminina": "B09992780" }
-        }
+        "Calça Masculina": { limite: 3, tamanhos: { "36": "B09991539", "38": "B09991540", "40": "B09991541", "42": "B09991542", "44": "B09991543", "46": "B09991544", "48": "B09991545", "50": "B09991546", "52": "B09991146", "54": "B09991547", "56": "B09991548", "60": "B09991549" } },
+        "Calça Feminina": { limite: 3, tamanhos: { "32": "B09991550", "34": "B09991551", "36": "B09991552", "38": "B09991553", "40": "B09991554", "42": "B09991555", "44": "B09991556", "46": "B09991557", "48": "B09991558", "50": "B09991559", "52": "B09991560", "54": "B09991561" } },
+        "Camisa Polo Masculina": { limite: 3, tamanhos: { "P": "B09990435", "M": "B09990436", "G": "B09990437", "GG": "B09990438", "SGG": "B09990439", "EXG": "B09990440" } },
+        "Camisa Polo Feminina": { limite: 3, tamanhos: { "P": "B09993325", "M": "B09993326", "G": "B09993327", "GG": "B09993328", "SGG": "B09993329", "EXG": "B09993330" } },
+        "Bermuda": { limite: 2, tamanhos: { "36": "B09991521", "40": "B09991522", "44": "B09991523", "48": "B09991524", "52": "B09991525", "56": "B09991526", "60": "B09991527" } },
+        "Blusa Moleton": { limite: 1, tamanhos: { "P": "B09990200", "M": "B09990201", "G": "B09990202", "GG": "B09990203", "EXG": "B09990204" } },
+        "Blusa Manga 3/4": { limite: 2, tamanhos: { "P": "B09990211", "M": "B09990212", "G": "B09990213", "GG": "B09990214", "EXG": "B09990215" } },
+        "Sapato Elástico (Bota)": { limite: 1, tamanhos: { "33": "B09993240", "34": "B09993241", "35": "B09993242", "36": "B09993243", "37": "B09993244", "38": "B09993245", "39": "B09993246", "40": "B09993247", "41": "B09993248", "42": "B09993249", "43": "B09993250", "44": "B09993251", "45": "B09993252", "46": "B09993253", "47": "B09993254", "48": "B09993255", "49": "B09993256", "50": "B09993257" } },
+        "Sapato Cadarço": { limite: 1, tamanhos: { "33": "B09993260", "34": "B09993261", "35": "B09993262", "36": "B09993263", "37": "B09993264", "38": "B09993265", "39": "B09993266", "40": "B09993267", "41": "B09993268", "42": "B09993269", "43": "B09993270", "44": "B09993271", "45": "B09993272", "46": "B09993273", "47": "B09993274", "48": "B09993275", "49": "B09994276", "50": "B09995277" } },
+        "Palmilha": { limite: 2, tamanhos: { "33": "B09992340", "34": "B09992341", "35": "B09992342", "36": "B09992343", "37": "B09992344", "38": "B09992345", "39": "B09992346", "40": "B09992347", "41": "B09992348", "42": "B09992349", "43": "B09992350", "44": "B09992351", "45": "B09992352", "46": "B09992353" } },
+        "Óculos de Proteção": { limite: 1, tamanhos: { "Masculino": "B09991980", "Feminino": "B09991982", "Sobrepor (Grau)": "B09991965" } },
+        "Protetor Auditivo": { limite: 2, tamanhos: { "Plug P": "B09990056", "Plug M": "B09990057", "Plug G": "B09990058", "Tipo Espuma": "B09990051", "Abafador Concha": "B09990060" } },
+        "Creme Protetor": { limite: 1, tamanhos: { "Pote": "B09991010" } },
+        "Protetor Solar": { limite: 1, tamanhos: { "Frasco": "B09991009" } },
+        "Meia": { limite: 6, tamanhos: { "Masculina": "B09992580", "Feminina": "B09992780" } },
+        "Diversos": { limite: 1, tamanhos: { "Redinha": "B09992065", "Máscara Pano": "B09992410", "Cadarço": "B09990935" } }
     };
 
     let listaExportacao = [];
-    const CENTRO_CUSTO = "4694"; // VALOR FIXO SOLICITADO
+    let statusTurmas = JSON.parse(localStorage.getItem('statusSolicitacoes')) || {};
+    const ESTADOS = ["Não Iniciado", "Com Segurança", "Aguardando Almox.", "Pronto"];
 
-    // --- 2. INICIALIZAÇÃO ---
     window.onload = function() {
-        const selAluno = document.getElementById('selectAluno');
-        alunos.forEach((aluno, index) => {
-            const opt = document.createElement('option');
-            opt.value = index;
-            opt.text = aluno.nome;
-            selAluno.appendChild(opt);
-        });
-
         const selTipo = document.getElementById('tipoPeca');
-        for (let item in catalogo) {
-            const opt = document.createElement('option');
-            opt.value = item;
-            opt.text = item;
-            selTipo.appendChild(opt);
-        }
+        Object.keys(catalogo).sort().forEach(item => { let opt = document.createElement('option'); opt.value = item; opt.text = item; selTipo.appendChild(opt); });
+        atualizarTabelaStatus();
     };
 
-    // --- 3. LÓGICA DE INTERFACE ---
+    function carregarTurmas() {
+        const turno = document.getElementById('selectTurno').value;
+        const selTurma = document.getElementById('selectTurma');
+        const selAluno = document.getElementById('selectAluno');
+        selTurma.innerHTML = '<option value="">-- Selecione a Turma --</option>'; selAluno.innerHTML = '<option value="">Selecione a turma primeiro</option>';
+        selTurma.disabled = true; selAluno.disabled = true;
+        document.getElementById('displayAluno').style.display = 'none';
+        if (turno) {
+            selTurma.disabled = false;
+            Object.keys(bancoAlunos).forEach(turma => { if (turma.startsWith(turno)) { let opt = document.createElement('option'); opt.value = turma; opt.text = turma; selTurma.appendChild(opt); } });
+        }
+    }
+
+    function carregarAlunos() {
+        const turma = document.getElementById('selectTurma').value;
+        const selAluno = document.getElementById('selectAluno');
+        selAluno.innerHTML = '<option value="">-- Selecione o Aluno --</option>';
+        if (turma && bancoAlunos[turma]) {
+            selAluno.disabled = false;
+            bancoAlunos[turma].forEach((aluno, index) => { let opt = document.createElement('option'); opt.value = index; opt.text = aluno.nome; selAluno.appendChild(opt); });
+        } else { selAluno.disabled = true; }
+    }
+
     function mostrarInfoAluno() {
+        const turma = document.getElementById('selectTurma').value;
         const idx = document.getElementById('selectAluno').value;
         const display = document.getElementById('displayAluno');
-        
-        if (idx !== "") {
-            display.style.display = 'block';
-            display.innerHTML = `Código do Aluno: <strong>${alunos[idx].codigo}</strong>`;
-        } else {
-            display.style.display = 'none';
-        }
+        if (turma && idx !== "") {
+            const aluno = bancoAlunos[turma][idx];
+            display.style.display = 'block'; display.innerHTML = `Registro (Reg): <strong>${aluno.codigo}</strong>`;
+        } else { display.style.display = 'none'; }
     }
 
     function carregarTamanhos() {
@@ -216,23 +322,12 @@
         const selTam = document.getElementById('tamanhoPeca');
         const selQtd = document.getElementById('qtdPeca');
         const btn = document.getElementById('btnAdd');
-        
-        selTam.innerHTML = '<option value="">-- Selecione Tamanho --</option>';
-        selQtd.innerHTML = '<option value="">-</option>';
-        selQtd.disabled = true;
-        selTam.disabled = true;
-        btn.disabled = true;
+        selTam.innerHTML = '<option value="">-- Selecione --</option>'; selQtd.innerHTML = '<option value="">-</option>';
+        selQtd.disabled = true; selTam.disabled = true; btn.disabled = true;
         document.getElementById('displayPeca').style.display = 'none';
-
         if (tipo && catalogo[tipo]) {
             selTam.disabled = false;
-            const tamList = catalogo[tipo].tamanhos;
-            for (let t in tamList) {
-                const opt = document.createElement('option');
-                opt.value = t;
-                opt.text = t;
-                selTam.appendChild(opt);
-            }
+            for (let tam in catalogo[tipo].tamanhos) { let opt = document.createElement('option'); opt.value = tam; opt.text = tam; selTam.appendChild(opt); }
         }
     }
 
@@ -242,129 +337,141 @@
         const display = document.getElementById('displayPeca');
         const selQtd = document.getElementById('qtdPeca');
         const btn = document.getElementById('btnAdd');
-
         if (tipo && tam) {
-            const dadosItem = catalogo[tipo];
-            const codigo = dadosItem.tamanhos[tam];
-            const maxQtd = dadosItem.limite;
-
-            display.style.display = 'block';
-            display.innerHTML = `Código do Item: <strong>${codigo}</strong><br>Limite Máximo: ${maxQtd}`;
-
+            const dados = catalogo[tipo];
+            const codigoB09 = dados.tamanhos[tam];
+            display.style.display = 'block'; display.innerHTML = `Código do Item: <strong>${codigoB09}</strong> | Limite: ${dados.limite}`;
             selQtd.innerHTML = '';
-            for (let i = 1; i <= maxQtd; i++) {
-                const opt = document.createElement('option');
-                opt.value = i;
-                opt.text = i;
-                selQtd.appendChild(opt);
-            }
-            selQtd.disabled = false;
-            btn.disabled = false;
+            for (let i = 1; i <= dados.limite; i++) { let opt = document.createElement('option'); opt.value = i; opt.text = i; selQtd.appendChild(opt); }
+            selQtd.disabled = false; btn.disabled = false;
         }
     }
 
     function adicionarItem() {
+        const turma = document.getElementById('selectTurma').value;
         const idxAluno = document.getElementById('selectAluno').value;
         const tipo = document.getElementById('tipoPeca').value;
         const tam = document.getElementById('tamanhoPeca').value;
         const qtd = document.getElementById('qtdPeca').value;
-
-        if (idxAluno === "" || tipo === "" || tam === "") return alert("Preencha todos os campos.");
-
-        const alunoObj = alunos[idxAluno];
-        const codigoPeca = catalogo[tipo].tamanhos[tam];
-
-        // Adiciona à lista
+        if (!turma || idxAluno === "" || !tipo || !tam) return alert("Preencha todos os campos.");
+        const alunoObj = bancoAlunos[turma][idxAluno];
+        const codigoB09 = catalogo[tipo].tamanhos[tam];
         listaExportacao.push({
             id: Date.now(),
-            nomeAluno: alunoObj.nome, // Usado para ordenar
-            codAluno: alunoObj.codigo,
-            codPeca: codigoPeca,
+            turma: turma,
+            nomeAluno: alunoObj.nome,
+            regAluno: alunoObj.codigo,
+            peca: tipo,
+            tamanho: tam,
+            codigoItem: codigoB09,
             quantidade: parseInt(qtd)
         });
-
-        atualizarTabelaVisual();
-        
-        const btn = document.getElementById('btnAdd');
-        btn.innerText = "ADICIONADO COM SUCESSO! ✔";
-        setTimeout(() => btn.innerText = "Adicionar à Lista", 1000);
+        atualizarTabelaSite();
     }
 
     function removerItem(id) {
         listaExportacao = listaExportacao.filter(item => item.id !== id);
-        atualizarTabelaVisual();
+        atualizarTabelaSite();
     }
 
-    function atualizarTabelaVisual() {
+    function atualizarTabelaSite() {
         const tbody = document.querySelector("#tabelaSite tbody");
         tbody.innerHTML = "";
-
-        // ORDENAÇÃO ALFABÉTICA AUTOMÁTICA
-        listaExportacao.sort((a, b) => a.nomeAluno.localeCompare(b.nomeAluno));
-
-        if(listaExportacao.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='6' style='color:#999; padding: 20px;'>Nenhum item adicionado ainda.</td></tr>";
-            return;
-        }
-
+        if (listaExportacao.length === 0) { tbody.innerHTML = "<tr><td colspan='5' style='color:#999; padding:20px;'>Nenhum item adicionado.</td></tr>"; return; }
+        listaExportacao.sort((a, b) => a.turma.localeCompare(b.turma) || a.nomeAluno.localeCompare(b.nomeAluno));
         listaExportacao.forEach(item => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${item.nomeAluno}</td>
-                <td><strong>${item.codAluno}</strong></td>
-                <td>${CENTRO_CUSTO}</td>
-                <td>${item.codPeca}</td>
-                <td>${item.quantidade}</td>
-                <td><button class="btn-remove" onclick="removerItem(${item.id})">Remover</button></td>
-            `;
+            tr.innerHTML = `<td><strong>${item.turma}</strong></td><td>${item.nomeAluno} <br><small>Reg: ${item.regAluno}</small></td><td>${item.peca} (${item.tamanho})<br><small>${item.codigoItem}</small></td><td>${item.quantidade}</td><td><button class="btn-remove" onclick="removerItem(${item.id})"><i class="fa-solid fa-trash"></i></button></td>`;
             tbody.appendChild(tr);
         });
     }
 
-    // --- 4. EXPORTAÇÃO EXCEL IDÊNTICA AO MODELO MBB ---
-    function gerarExcel() {
-        if (listaExportacao.length === 0) return alert("A lista está vazia!");
+    function enviarEmailReal() {
+        if (listaExportacao.length === 0) return alert("A lista está vazia! Adicione itens antes de enviar.");
+        if(EMAIL_SERVICE_ID.includes("COLE_AQUI") || firebaseConfig.apiKey.includes("SUA_API_KEY")) {
+            return alert("ERRO DE CONFIGURAÇÃO:\n\nVocê precisa colocar suas chaves do Firebase e do EmailJS no código.");
+        }
 
-        // Garante a ordenação antes de gerar o arquivo
-        listaExportacao.sort((a, b) => a.nomeAluno.localeCompare(b.nomeAluno));
+        const overlay = document.getElementById('loadingOverlay');
+        const errorDisplay = document.getElementById('errorDisplay');
+        const btnClose = document.getElementById('btnCloseError');
+        overlay.style.display = 'flex'; errorDisplay.style.display = 'none'; btnClose.style.display = 'none';
+        document.querySelector('#loadingOverlay h3').innerText = "Gerando Tabela de Importação...";
 
-        // Mapeia para o formato EXATO do arquivo enviado
-        // As chaves do objeto abaixo (ex: "Oper") são os cabeçalhos da coluna do Excel
-        const dadosExcel = listaExportacao.map(item => ({
-            "Oper": "",                        // Coluna A (Vazia)
-            "Reg. Solicitante": item.codAluno, // Coluna B
-            "Reg. Responsavel": "",            // Coluna C (Vazia)
-            "C.C. Solicitante": CENTRO_CUSTO,  // Coluna D (Fixo 4694)
-            "Almo (DACC)": "",                 // Coluna E (Vazia)
-            "Numero do Item": item.codPeca,    // Coluna F
-            "Quantidade": item.quantidade,     // Coluna G
-            "Clas Contabil TD": "",            // Coluna H (Vazia)
-            "Clas Contabil2": CENTRO_CUSTO,    // Coluna I (Fixo 4694)
-            "Clas Contabil Id": "",            // Coluna J (Vazia)
-            "Observação": ""                   // Coluna K (Vazia)
-        }));
+        let tabelaHTML = `
+        <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px; color: #333; text-align: center;">
+            <thead>
+                <tr style="background-color: #004e92; color: #ffffff;">
+                    <th style="border: 1px solid #dddddd; padding: 8px;">Reg. Solicitante</th>
+                    <th style="border: 1px solid #dddddd; padding: 8px;">C.C. Solicitante</th>
+                    <th style="border: 1px solid #dddddd; padding: 8px;">Numero do Item</th>
+                    <th style="border: 1px solid #dddddd; padding: 8px;">Quantidade</th>
+                    <th style="border: 1px solid #dddddd; padding: 8px;">Clas Contabil2</th>
+                </tr>
+            </thead>
+            <tbody>`;
 
-        // Cria a planilha
-        const wb = XLSX.utils.book_new();
-        
-        // Converte os dados, forçando a ordem das colunas
-        const ws = XLSX.utils.json_to_sheet(dadosExcel, {
-            header: [
-                "Oper", "Reg. Solicitante", "Reg. Responsavel", "C.C. Solicitante", 
-                "Almo (DACC)", "Numero do Item", "Quantidade", "Clas Contabil TD", 
-                "Clas Contabil2", "Clas Contabil Id", "Observação"
-            ]
+        listaExportacao.forEach(item => {
+            tabelaHTML += `
+                <tr style="border-bottom: 1px solid #dddddd;">
+                    <td style="border: 1px solid #dddddd; padding: 8px;">${item.regAluno}</td>
+                    <td style="border: 1px solid #dddddd; padding: 8px;">${CENTRO_CUSTO}</td>
+                    <td style="border: 1px solid #dddddd; padding: 8px;">${item.codigoItem}</td>
+                    <td style="border: 1px solid #dddddd; padding: 8px;">${item.quantidade}</td>
+                    <td style="border: 1px solid #dddddd; padding: 8px;">${CENTRO_CUSTO}</td>
+                </tr>`;
         });
-        
-        // Ajusta largura das colunas para ficar parecido com o original
-        ws['!cols'] = [
-            {wch: 8}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 12}, 
-            {wch: 20}, {wch: 12}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 30}
-        ];
+        tabelaHTML += `</tbody></table>`;
 
-        XLSX.utils.book_append_sheet(wb, ws, "Requisicoes_SIL_AEPI"); // Nome da aba igual ao original
-        XLSX.writeFile(wb, "Requisicao_Uniforme_MBB.xlsx");
+        const turmasUnicas = [...new Set(listaExportacao.map(i => i.turma))].join(", ");
+        const params = { turma: turmasUnicas, mensagem: tabelaHTML, data: new Date().toLocaleString() };
+
+        emailjs.send(EMAIL_SERVICE_ID, EMAIL_TEMPLATE_ID, params)
+            .then(function(response) {
+                alert("✅ E-mail enviado com sucesso!\n\nFoi enviada a tabela de 5 colunas padrão para importação.\nO Excel backup será baixado.");
+                const turmasAfetadas = [...new Set(listaExportacao.map(item => item.turma))];
+                turmasAfetadas.forEach(turma => { statusTurmas[turma] = { status: 1, data: new Date().toLocaleString() }; });
+                localStorage.setItem('statusSolicitacoes', JSON.stringify(statusTurmas));
+                atualizarTabelaStatus();
+                gerarExcel();
+                listaExportacao = [];
+                atualizarTabelaSite();
+                overlay.style.display = 'none';
+            }, function(error) {
+                document.querySelector('#loadingOverlay h3').innerText = "❌ Falha no Envio";
+                errorDisplay.style.display = 'block'; btnClose.style.display = 'block';
+                errorDisplay.innerText = "Erro: " + JSON.stringify(error);
+            });
     }
+
+    function gerarExcel() {
+        const dadosFormatados = listaExportacao.map(item => ({
+            "Oper": "", "Reg. Solicitante": parseInt(item.regAluno), "Reg. Responsavel": "", "C.C. Solicitante": parseInt(CENTRO_CUSTO), "Almo (DACC)": "", "Numero do Item": item.codigoItem, "Quantidade": item.quantidade, "Clas Contabil TD": "", "Clas Contabil2": parseInt(CENTRO_CUSTO), "Clas Contabil Id": "", "Observação": `Solicitacao Turma ${item.turma}`
+        }));
+        const ws = XLSX.utils.json_to_sheet(dadosFormatados, { header: ["Oper", "Reg. Solicitante", "Reg. Responsavel", "C.C. Solicitante", "Almo (DACC)", "Numero do Item", "Quantidade", "Clas Contabil TD", "Clas Contabil2", "Clas Contabil Id", "Observação"] });
+        ws['!cols'] = [{wch:5}, {wch:15}, {wch:15}, {wch:15}, {wch:10}, {wch:20}, {wch:10}, {wch:15}, {wch:15}, {wch:10}, {wch:30}];
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Requisicoes_SIL_AEPI");
+        XLSX.writeFile(wb, "Requisicao_EPIs_Exportacao.xlsx");
+    }
+
+    function abrirDashboard() { document.getElementById('dashboardModal').style.display = 'flex'; atualizarTabelaStatus(); }
+    function fecharDashboard() { document.getElementById('dashboardModal').style.display = 'none'; }
+    
+    function atualizarTabelaStatus() {
+        const tbody = document.querySelector("#tabelaStatus tbody");
+        tbody.innerHTML = "";
+        Object.keys(bancoAlunos).sort().forEach(turma => {
+            const info = statusTurmas[turma] || { status: 0, data: "-" };
+            let badgeClass = "status-none";
+            if(info.status === 1) badgeClass = "status-coord"; else if(info.status === 2) badgeClass = "status-spec"; else if(info.status === 3) badgeClass = "status-almox"; else if(info.status === 4) badgeClass = "status-done";
+            let tr = document.createElement('tr');
+            tr.innerHTML = `<td><strong>${turma}</strong></td><td><span class="status-badge ${badgeClass}">${ESTADOS[info.status]}</span></td><td><small>${info.data}</small></td><td>${info.status > 0 ? '✔️' : '-'}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+    
+    window.onclick = function(e) { if (e.target == document.getElementById('dashboardModal')) fecharDashboard(); }
 </script>
 
 </body>

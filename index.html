@@ -3,714 +3,900 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestão EPI 2026</title>
+    <title>Gestão EPI 2026 | Painel Moderno</title>
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     
     <style>
-        /* --- ESTILO VISUAL --- */
-        :root { --primary: #004e92; --secondary: #000428; --accent: #00a8cc; --bg: #eef2f3; --success: #27ae60; --danger: #c0392b; --warning: #f39c12; }
-        * { box-sizing: border-box; outline: none; }
-        body { font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif; background: linear-gradient(135deg, #eef2f3 0%, #8e9eab 100%); padding: 20px; margin: 0; color: #333; min-height: 100vh; }
-        .main-container { max-width: 1200px; margin: 0 auto; padding-bottom: 50px; display: none; }
-        
-        /* LOGIN */
-        #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 90vh; text-align: center; }
-        .login-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-width: 400px; width: 100%; }
-        .btn-google { background-color: #db4437; color: white; padding: 15px 25px; border-radius: 50px; border: none; font-size: 1rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; transition: transform 0.2s; box-shadow: 0 4px 10px rgba(219, 68, 55, 0.3); }
-        .btn-google:hover { transform: scale(1.03); background-color: #c53929; }
+        /* --- VARIÁVEIS E RESET --- */
+        :root {
+            --primary: #4361ee;       /* Azul Vibrante */
+            --primary-dark: #3a53d0;
+            --secondary: #3f37c9;     
+            --bg-body: #f4f7fa;       /* Fundo Cinza Claro */
+            --bg-card: #ffffff;
+            --text-main: #2b2d42;
+            --text-light: #8d99ae;
+            --success: #2ec4b6;
+            --danger: #ef233c;
+            --warning: #ff9f1c;
+            --radius: 12px;
+            --shadow: 0 10px 30px rgba(0,0,0,0.05);
+            --shadow-hover: 0 15px 35px rgba(67, 97, 238, 0.15);
+        }
 
-        /* HEADER */
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
-        h1 { color: var(--secondary); margin: 0; text-transform: uppercase; letter-spacing: 1px; font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
-        .header-buttons { display: flex; gap: 10px; align-items: center; }
-        .user-profile { display: flex; align-items: center; gap: 10px; background: white; padding: 5px 15px 5px 5px; border-radius: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .user-avatar { width: 35px; height: 35px; border-radius: 50%; }
-        .user-name { font-size: 0.9rem; font-weight: bold; color: var(--primary); }
-        .btn-logout { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.2rem; margin-left: 10px; }
-
-        /* CARDS E BOTOES */
-        .btn-dashboard { background-color: var(--secondary); color: white; padding: 10px 20px; border-radius: 30px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .btn-dashboard:hover { transform: scale(1.05); background-color: var(--primary); }
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; font-family: 'Poppins', sans-serif; }
         
-        .btn-admin { background-color: var(--warning); color: white; padding: 10px 20px; border-radius: 30px; border: none; font-weight: bold; cursor: pointer; display: none; align-items: center; gap: 8px; transition: 0.3s; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4); }
-        .btn-admin:hover { transform: scale(1.05); background-color: #e67e22; }
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-        .cards-wrapper { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 30px; }
-        .card { flex: 1; min-width: 300px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); transition: transform 0.3s ease; border-top: 5px solid var(--primary); }
-        h2 { color: var(--primary); margin-top: 0; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        label { display: block; margin-top: 15px; font-weight: 600; font-size: 0.85rem; color: #555; text-transform: uppercase; }
-        select, input { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; background-color: #fafafa; transition: 0.3s; }
-        select:focus { border-color: var(--primary); background-color: white; }
-        .info-box { margin-top: 15px; padding: 12px; background: #e0f7fa; border-radius: 8px; color: #006064; font-size: 0.9rem; border-left: 4px solid var(--accent); display: none; }
-        .btn-add { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 25px; transition: all 0.3s; }
-        .btn-add:disabled { background: #ccc; cursor: not-allowed; }
-        .btn-add:hover:not(:disabled) { background: var(--secondary); }
-        .btn-send-email { background: linear-gradient(to right, #11998e, #38ef7d); color: white; padding: 15px 30px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; float: right; margin-top: 20px; font-size: 1rem; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3); }
-        .btn-send-email:hover { transform: translateY(-2px); }
-        .btn-send-email:disabled { background: #ccc; transform: none; box-shadow: none; cursor: not-allowed; }
-        .table-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
-        .table-responsive { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; white-space: nowrap; }
-        thead tr { background-color: var(--primary); color: white; text-align: left; }
-        th, td { padding: 12px 15px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.9rem; }
-        .btn-remove { background-color: #ffdde1; color: var(--danger); border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
-        
-        /* MODAL GERAL */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal-content { background: white; width: 95%; max-width: 900px; max-height: 90vh; border-radius: 15px; padding: 30px; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.2); position: relative; }
-        .close-modal { position: absolute; top: 20px; right: 20px; font-size: 1.5rem; color: #999; cursor: pointer; }
-        
-        /* DASHBOARD STATUS */
-        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
-        .status-0 { background: #eee; color: #777; }
-        .status-1 { background: #fff3cd; color: #856404; }
-        .status-2 { background: #d1ecf1; color: #0c5460; }
-        .status-3 { background: #d8d7f8; color: #2f439e; }
-        .status-4 { background: #d4edda; color: #155724; }
-        
-        .adm-controls { display: none; gap: 5px; justify-content: center; } /* Só aparece para ADM */
-        .btn-mini { padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; color: white; font-size: 0.7rem; }
-        .btn-back { background: var(--danger); }
-        .btn-next { background: var(--success); }
+        /* --- LOGIN SCREEN --- */
+        #loginScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #4361ee 0%, #3f37c9 100%);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 2000;
+        }
+        .login-card {
+            background: white; padding: 40px; border-radius: 20px;
+            text-align: center; width: 90%; max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            animation: fadeIn Up 0.5s ease;
+        }
+        .btn-google {
+            background: #fff; border: 2px solid #eee; color: #444;
+            padding: 12px 20px; border-radius: 50px; font-weight: 600;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; cursor: pointer; transition: 0.3s; margin-top: 20px;
+        }
+        .btn-google:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
 
-        /* AREAS ADM */
-        .adm-section { background: #f9f9f9; padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px solid #eee; }
-        .adm-title { font-size: 0.9rem; font-weight: bold; color: var(--secondary); margin-bottom: 10px; display: block; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        /* --- HEADER & LAYOUT --- */
+        .main-container {
+            width: 100%; max-width: 1200px; padding: 20px;
+            display: none; /* Inicia oculto até login */
+            animation: fadeIn 0.8s ease;
+        }
 
-        #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 2000; justify-content: center; align-items: center; flex-direction: column; text-align: center; }
-        .spinner { border: 8px solid #f3f3f3; border-top: 8px solid var(--primary); border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; }
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 30px; flex-wrap: wrap; gap: 15px;
+            background: white; padding: 15px 25px; border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .brand h1 { font-size: 1.4rem; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        
+        .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        
+        .user-pill {
+            display: flex; align-items: center; gap: 10px; background: #f8f9fa;
+            padding: 5px 15px 5px 5px; border-radius: 30px; border: 1px solid #e9ecef;
+        }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: var(--text-main); }
+        .btn-logout { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.1rem; margin-left: 5px; }
+
+        /* --- BOTÕES GERAIS --- */
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; font-size: 0.9rem; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .btn:active { transform: scale(0.98); }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-dark { background: var(--text-main); color: white; }
+
+        /* --- CARDS & GRID --- */
+        .grid-wrapper { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        
+        .card {
+            background: var(--bg-card); padding: 25px; border-radius: var(--radius);
+            box-shadow: var(--shadow); border: 1px solid #edf2f7;
+            position: relative; overflow: hidden;
+        }
+        .card::before { content:''; position: absolute; top:0; left:0; width: 100%; height: 4px; background: var(--primary); }
+        
+        .card h2 { font-size: 1.1rem; color: var(--text-main); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .card h2 i { color: var(--primary); }
+
+        /* --- INPUTS & SELECTS --- */
+        label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-light); margin-bottom: 6px; margin-top: 15px; }
+        select, input {
+            width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;
+            background: #fdfdfd; font-size: 0.95rem; color: var(--text-main); transition: 0.3s;
+        }
+        select:focus, input:focus { border-color: var(--primary); background: white; }
+        select:disabled, input:disabled { background: #f1f3f5; cursor: not-allowed; opacity: 0.7; }
+
+        /* --- INFO BOXES --- */
+        .info-box {
+            background: #eef2ff; border-left: 4px solid var(--primary);
+            padding: 12px; margin-top: 15px; border-radius: 4px;
+            color: var(--primary-dark); font-size: 0.9rem; display: none;
+        }
+
+        /* --- TABELA --- */
+        .table-container { overflow-x: auto; margin-top: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; background: white; white-space: nowrap; }
+        th { background: #f8f9fa; color: var(--text-light); font-weight: 600; padding: 15px; text-align: left; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        td { padding: 15px; border-top: 1px solid #e2e8f0; font-size: 0.9rem; color: var(--text-main); }
+        tr:hover td { background: #fafafa; }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            z-index: 1500; display: none; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: white; width: 95%; max-width: 600px; max-height: 90vh;
+            border-radius: 16px; padding: 30px; overflow-y: auto;
+            animation: slideUp 0.3s ease; position: relative;
+        }
+        .close-modal { position: absolute; top: 20px; right: 25px; font-size: 1.5rem; cursor: pointer; color: #ccc; transition: 0.2s; }
+        .close-modal:hover { color: var(--danger); }
+
+        /* --- ESTILOS ESPECIFICOS DO ADMIN --- */
+        .adm-section { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px; border: 1px solid #e9ecef; }
+        .adm-header { font-size: 0.8rem; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 15px; display: block; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        
+        /* Badges de Status */
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+        .st-0 { background: #e2e8f0; color: #64748b; }
+        .st-1 { background: #fff3cd; color: #b7791f; }
+        .st-2 { background: #bee3f8; color: #2b6cb0; }
+        .st-3 { background: #c6f6d5; color: #276749; }
+        .st-4 { background: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+
+        /* Loading */
+        #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .error-log { margin-top:20px; padding:15px; background:#f8d7da; color:#721c24; border-radius:8px; font-size:0.85rem; max-width:80%; word-break:break-all; display:none; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Mobile Adjustments */
+        @media(max-width: 600px) {
+            header { flex-direction: column; align-items: flex-start; }
+            .header-actions { width: 100%; justify-content: space-between; margin-top: 10px; }
+            .grid-wrapper { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 
-<div id="loadingOverlay">
-    <div class="spinner"></div>
-    <h3 style="color: var(--primary); margin-top: 20px;">Processando...</h3>
-    <div id="errorDisplay" class="error-log"></div>
-    <button id="btnCloseError" style="display:none; margin-top:10px;" onclick="document.getElementById('loadingOverlay').style.display='none'">Fechar</button>
-</div>
-
-<div id="loginScreen">
-    <div class="login-card">
-        <h1 style="justify-content: center; margin-bottom: 20px;"><i class="fa-solid fa-helmet-safety"></i> Gestão EPI</h1>
-        <p style="color: #666; margin-bottom: 30px;">Acesso Restrito</p>
-        <button class="btn-google" onclick="fazerLoginGoogle()">
-            <i class="fa-brands fa-google"></i> Entrar com Google
-        </button>
-    </div>
-</div>
-
-<div class="main-container" id="appContent">
-    <header>
-        <h1><i class="fa-solid fa-helmet-safety"></i> Controle 2026</h1>
-        <div class="header-buttons">
-            <button id="btnAdminPanel" class="btn-admin" onclick="abrirAdminPanel()">
-                <i class="fa-solid fa-users-gear"></i> Gestão Alunos
-            </button>
-
-            <button class="btn-dashboard" onclick="abrirDashboard()">
-                <i class="fa-solid fa-list-check"></i> Status
-            </button>
-            <div class="user-profile">
-                <img src="" id="userAvatar" class="user-avatar" alt="Avatar">
-                <span id="userName" class="user-name">Usuário</span>
-                <button class="btn-logout" onclick="fazerLogout()" title="Sair"><i class="fa-solid fa-right-from-bracket"></i></button>
-            </div>
-        </div>
-    </header>
-
-    <div class="cards-wrapper">
-        <div class="card">
-            <h2><i class="fa-solid fa-user-tag"></i> 1. Identificação</h2>
-            <label>Turno:</label>
-            <select id="selectTurno" onchange="carregarTurmas()"><option value="">-- Selecione o Turno --</option><option value="M">Manhã (Turmas M)</option><option value="T">Tarde (Turmas T)</option></select>
-            <label>Turma:</label>
-            <select id="selectTurma" disabled onchange="carregarAlunos()"><option value="">Selecione o turno primeiro</option></select>
-            <label>Aluno:</label>
-            <select id="selectAluno" disabled onchange="mostrarInfoAluno()"><option value="">Selecione a turma primeiro</option></select>
-            <div id="displayAluno" class="info-box"></div>
-        </div>
-
-        <div class="card">
-            <h2><i class="fa-solid fa-shirt"></i> 2. Material</h2>
-            <label>Item:</label>
-            <select id="tipoPeca" onchange="carregarTamanhos()"><option value="">-- Selecione o Item --</option></select>
-            <label>Tamanho/Opção:</label>
-            <select id="tamanhoPeca" disabled onchange="atualizarInfoPeca()"><option value="">Selecione o item</option></select>
-            <div id="displayPeca" class="info-box"></div>
-            <label>Quantidade:</label>
-            <select id="qtdPeca" disabled><option value="">-</option></select>
-            <button id="btnAdd" class="btn-add" onclick="adicionarItem()" disabled><i class="fa-solid fa-plus"></i> Adicionar à Lista</button>
-        </div>
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <h3 style="color: var(--primary); margin-top: 20px;">Processando...</h3>
+        <p id="loadingMsg" style="color: #666; font-size: 0.9rem;">Aguarde um momento</p>
     </div>
 
-    <div class="table-card">
-        <h2>Itens na Lista</h2>
-        <div class="table-responsive">
-            <table id="tabelaSite">
-                <thead><tr><th>Turma</th><th>Aluno (Reg)</th><th>Item (B09...)</th><th>Qtd</th><th>Ação</th></tr></thead>
-                <tbody><tr><td colspan='5' style='color:#999; padding:20px;'>Nenhum item adicionado ainda.</td></tr></tbody>
-            </table>
-        </div>
-        <button id="btnSend" class="btn-send-email" onclick="enviarEmailReal()"><i class="fa-solid fa-paper-plane"></i> Enviar Tabela e Excel</button>
-        <div style="clear: both;"></div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="dashboardModal">
-    <div class="modal-content">
-        <span class="close-modal" onclick="fecharModais()">&times;</span>
-        <h2 style="color: var(--secondary);">Status das Solicitações</h2>
-        <div class="table-responsive">
-            <table id="tabelaStatus">
-                <thead>
-                    <tr>
-                        <th>Turma</th>
-                        <th>Status</th>
-                        <th>Última Atualização</th>
-                        <th id="headerAcoesAdm" style="display: none;">Ações ADM</th> 
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="adminModal">
-    <div class="modal-content">
-        <span class="close-modal" onclick="fecharModais()">&times;</span>
-        <h2 style="color: var(--warning);"><i class="fa-solid fa-pen-to-square"></i> Painel Administrativo</h2>
-        
-        <label>Selecione a Turma:</label>
-        <select id="admSelectTurma" onchange="admCarregarTurmaEAlunos()"><option value="">-- Selecione --</option></select>
-        
-        <div id="admClassArea" class="adm-section" style="display:none;">
-            <span class="adm-title">EDITAR NOME DA TURMA</span>
-            <label>Nome da Turma:</label>
-            <input type="text" id="admInputTurmaNome">
-            <button onclick="admRenomearTurma()" style="width:100%; margin-top:10px; background:var(--secondary); color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">Atualizar Nome da Turma</button>
-        </div>
-
-        <div class="adm-section">
-            <span class="adm-title">EDITAR ALUNOS</span>
-            <label>Selecione o Aluno:</label>
-            <select id="admSelectAluno" disabled onchange="admPreencherInputs()"><option value="">Selecione a Turma Acima</option></select>
+    <div id="loginScreen">
+        <div class="login-card">
+            <div style="font-size: 3rem; color: var(--primary); margin-bottom: 10px;"><i class="fa-solid fa-helmet-safety"></i></div>
+            <h1 style="color: var(--text-main); font-size: 1.5rem; margin-bottom: 5px;">Gestão EPI</h1>
+            <p style="color: var(--text-light); font-size: 0.9rem; margin-bottom: 30px;">Faça login para acessar o sistema</p>
             
-            <div id="admEditArea" style="display:none; margin-top:10px;">
-                <label>Nome do Aluno:</label>
-                <input type="text" id="admInputNome">
-                <label>Registro (Matrícula):</label>
-                <input type="text" id="admInputReg">
-                <button onclick="admSalvarAluno()" style="width:100%; margin-top:15px; background:var(--success); color:white; border:none; padding:10px; border-radius:5px; font-weight:bold; cursor:pointer;">💾 Salvar Dados do Aluno</button>
+            <button class="btn-google" onclick="fazerLoginGoogle()">
+                <i class="fa-brands fa-google"></i> Entrar com Google
+            </button>
+        </div>
+    </div>
+
+    <div class="main-container" id="appContent">
+        <header>
+            <div class="brand">
+                <h1><i class="fa-solid fa-shield-halved"></i> Controle 2026</h1>
+            </div>
+            <div class="header-actions">
+                <button id="btnAdminPanel" class="btn btn-warning" onclick="abrirAdminPanel()" style="display:none;">
+                    <i class="fa-solid fa-user-gear"></i> Admin
+                </button>
+                <button class="btn btn-dark" onclick="abrirDashboard()">
+                    <i class="fa-solid fa-list-check"></i> Status
+                </button>
+                
+                <div class="user-pill">
+                    <img src="" id="userAvatar" class="user-avatar" alt="User">
+                    <span id="userName" class="user-name">Usuário</span>
+                    <button class="btn-logout" onclick="fazerLogout()" title="Sair"><i class="fa-solid fa-power-off"></i></button>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid-wrapper">
+            <div class="card">
+                <h2><i class="fa-solid fa-users-viewfinder"></i> Seleção de Aluno</h2>
+                
+                <label>Turno</label>
+                <select id="selectTurno" onchange="carregarTurmas()">
+                    <option value="">-- Selecione --</option>
+                    <option value="M">Manhã</option>
+                    <option value="T">Tarde</option>
+                </select>
+
+                <label>Turma</label>
+                <select id="selectTurma" disabled onchange="carregarAlunos()">
+                    <option value="">Aguardando Turno...</option>
+                </select>
+
+                <label>Aluno</label>
+                <select id="selectAluno" disabled onchange="mostrarInfoAluno()">
+                    <option value="">Aguardando Turma...</option>
+                </select>
+
+                <div id="displayAluno" class="info-box"></div>
+            </div>
+
+            <div class="card">
+                <h2><i class="fa-solid fa-vest"></i> Seleção de Material</h2>
+                
+                <label>Item do Catálogo</label>
+                <select id="tipoPeca" onchange="carregarTamanhos()">
+                    <option value="">-- Selecione o Item --</option>
+                </select>
+
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 2;">
+                        <label>Tamanho</label>
+                        <select id="tamanhoPeca" disabled onchange="atualizarInfoPeca()">
+                            <option value="">-</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Qtd</label>
+                        <select id="qtdPeca" disabled>
+                            <option value="">-</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="displayPeca" class="info-box"></div>
+
+                <button id="btnAdd" class="btn btn-primary" style="width: 100%; margin-top: 25px; justify-content: center;" onclick="adicionarItem()" disabled>
+                    <i class="fa-solid fa-plus-circle"></i> Adicionar à Lista
+                </button>
+            </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <h2><i class="fa-solid fa-clipboard-list"></i> Itens para Envio</h2>
+                <button id="btnSend" class="btn btn-success" onclick="enviarEmailReal()" disabled>
+                    <i class="fa-solid fa-paper-plane"></i> Finalizar e Enviar
+                </button>
+            </div>
+            
+            <div class="table-container">
+                <table id="tabelaSite">
+                    <thead>
+                        <tr>
+                            <th>Turma</th>
+                            <th>Aluno</th>
+                            <th>Item (Código)</th>
+                            <th>Qtd</th>
+                            <th style="text-align: center;">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan='5' style='text-align:center; color:#999; padding:30px;'>Nenhum item adicionado à lista.</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    // =========================================================================
-    // 1. CONFIGURAÇÃO (PREENCHA AQUI)
-    // =========================================================================
-    
-    // --- LISTA DE EMAILS ADMINISTRADORES ---
-    const EMAILS_ADM = [
-        "gustavo.s.rodrigues10@aluno.senai.br", 
-        "outro.adm@empresa.com.br"
-    ];
+    <div class="modal-overlay" id="dashboardModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="fecharModais()">&times;</span>
+            <h2 style="color: var(--secondary); margin-bottom: 20px;"><i class="fa-solid fa-chart-line"></i> Status das Turmas</h2>
+            
+            <div class="table-container">
+                <table id="tabelaStatus">
+                    <thead>
+                        <tr>
+                            <th>Turma</th>
+                            <th>Status Atual</th>
+                            <th>Data</th>
+                            <th id="headerAcoesAdm" style="display: none; text-align: center;">Controle</th> 
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-    // --- FIREBASE KEYS ---
-    const firebaseConfig = {
-        apiKey: "AIzaSyA0v_e_jug-LitdrSSechKrCmXAKaBA00o",
-        authDomain: "gestaoepi-bc265.firebaseapp.com",
-        projectId: "gestaoepi-bc265",
-        storageBucket: "gestaoepi-bc265.firebasestorage.app",
-        messagingSenderId: "100298795455",
-        appId: "1:100298795455:web:85398ec8b014790ae9590a"
-    };
-
-    // --- EMAILJS KEYS ---
-    const EMAIL_SERVICE_ID = "service_2tp3jlm"; 
-    const EMAIL_TEMPLATE_ID = "template_5kplq56"; 
-    const EMAIL_PUBLIC_KEY = "zDXgHHECIycy13U3H"; 
-
-    // Inicialização
-    let auth;
-    let currentUserEmail = "";
-    let isAdmin = false;
-
-    try {
-        firebase.initializeApp(firebaseConfig);
-        auth = firebase.auth();
-        emailjs.init(EMAIL_PUBLIC_KEY);
-    } catch(e) { console.error("Erro config:", e); }
-
-    // =========================================================================
-    // 2. AUTHENTICATION & ADMIN CHECK
-    // =========================================================================
-    auth.onAuthStateChanged(user => {
-        if (user) {
-            currentUserEmail = user.email;
-            isAdmin = EMAILS_ADM.includes(currentUserEmail); 
-
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('appContent').style.display = 'block';
-            document.getElementById('userName').innerText = user.displayName || user.email;
-            document.getElementById('userAvatar').src = user.photoURL || "https://ui-avatars.com/api/?name="+user.email;
-
-            if (isAdmin) document.getElementById('btnAdminPanel').style.display = 'flex';
-        } else {
-            document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('appContent').style.display = 'none';
-        }
-    });
-
-    function fazerLoginGoogle() {
-        // 1. Configura a persistência para SESSION (Sessão)
-        // Isso garante que ao fechar a aba, o login seja esquecido.
-        auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
-        .then(() => {
-            // 2. Só depois de configurar, abre o popup do Google
-            const provider = new firebase.auth.GoogleAuthProvider();
-            return auth.signInWithPopup(provider);
-        })
-        .catch(error => {
-            alert("Erro: " + error.message);
-        });
-    }
-
-    function fazerLogout() { auth.signOut().then(() => location.reload()); }
-
-    // =========================================================================
-    // 3. DADOS
-    // =========================================================================
-    const CENTRO_CUSTO = "9464"; 
-    let bancoAlunos = JSON.parse(localStorage.getItem('db_alunos_v2'));
-
-    if (!bancoAlunos) {
-        const alunosT1A = [
-            { nome: "Ana Clara Carvalhal Gomes", codigo: "8001" }, { nome: "Ana Julia Xavier Martins", codigo: "8002" }, { nome: "Beatriz Dos Santos Nogueira", codigo: "8003" }, { nome: "Enzo Lima Rodovalho", codigo: "8004" }, { nome: "Guilherme Dos Santos Bueno", codigo: "8005" }, { nome: "Gustavo Da Silva Rodrigues", codigo: "8006" }, { nome: "Gustavo Gonçalves Silva", codigo: "8007" }, { nome: "Heitor Gonçalves Fernandes", codigo: "8008" }, { nome: "Hitalo Rodrigues Da Mata", codigo: "8009" }, { nome: "Julia Nagima Silva", codigo: "8010" }, { nome: "Luara Santos Neves Pinas", codigo: "8011" }, { nome: "Manuela De Sousa Frias", codigo: "8012" }, { nome: "Mauricio Lima Martins", codigo: "8013" }, { nome: "Pedro Dias De Oliveira", codigo: "8014" }, { nome: "Raphael Almeida Bomfim", codigo: "8015" }, { nome: "Vinicíus De Morais Dias", codigo: "8016" }
-        ];
-        function gerarTurmaGenerica(nomeTurma, inicioCodigo) { let lista = []; for(let i=1; i<=16; i++) { lista.push({ nome: `Aluno ${i} da ${nomeTurma}`, codigo: `${inicioCodigo + i}` }); } return lista; }
-
-        bancoAlunos = { "T1A": alunosT1A };
-        bancoAlunos["T1B"] = gerarTurmaGenerica("T1B", 8100); bancoAlunos["T1C"] = gerarTurmaGenerica("T1C", 8200); bancoAlunos["M2A"] = gerarTurmaGenerica("M2A", 8300); bancoAlunos["M2B"] = gerarTurmaGenerica("M2B", 8400); bancoAlunos["M2C"] = gerarTurmaGenerica("M2C", 8500); bancoAlunos["T3A"] = gerarTurmaGenerica("T3A", 8600); bancoAlunos["T3B"] = gerarTurmaGenerica("T3B", 8700); bancoAlunos["T3C"] = gerarTurmaGenerica("T3C", 8800); bancoAlunos["M4A"] = gerarTurmaGenerica("M4A", 8900); bancoAlunos["M4B"] = gerarTurmaGenerica("M4B", 9000); bancoAlunos["M4C"] = gerarTurmaGenerica("M4C", 9100);
-        localStorage.setItem('db_alunos_v2', JSON.stringify(bancoAlunos));
-    }
-
-    const catalogo = {
-        "Calça Masculina": { limite: 3, tamanhos: { "36": "B09991539", "38": "B09991540", "40": "B09991541", "42": "B09991542", "44": "B09991543", "46": "B09991544", "48": "B09991545", "50": "B09991546", "52": "B09991146", "54": "B09991547", "56": "B09991548", "60": "B09991549" } },
-        "Calça Feminina": { limite: 3, tamanhos: { "32": "B09991550", "34": "B09991551", "36": "B09991552", "38": "B09991553", "40": "B09991554", "42": "B09991555", "44": "B09991556", "46": "B09991557", "48": "B09991558", "50": "B09991559", "52": "B09991560", "54": "B09991561" } },
-        "Camisa Polo Masculina": { limite: 3, tamanhos: { "P": "B09990435", "M": "B09990436", "G": "B09990437", "GG": "B09990438", "SGG": "B09990439", "EXG": "B09990440" } },
-        "Camisa Polo Feminina": { limite: 3, tamanhos: { "P": "B09993325", "M": "B09993326", "G": "B09993327", "GG": "B09993328", "SGG": "B09993329", "EXG": "B09993330" } },
-        "Bermuda": { limite: 2, tamanhos: { "36": "B09991521", "40": "B09991522", "44": "B09991523", "48": "B09991524", "52": "B09991525", "56": "B09991526", "60": "B09991527" } },
-        "Blusa Moleton": { limite: 1, tamanhos: { "P": "B09990200", "M": "B09990201", "G": "B09990202", "GG": "B09990203", "EXG": "B09990204" } },
-        "Blusa Manga 3/4": { limite: 2, tamanhos: { "P": "B09990211", "M": "B09990212", "G": "B09990213", "GG": "B09990214", "EXG": "B09990215" } },
-        "Sapato Elástico (Bota)": { limite: 1, tamanhos: { "33": "B09993240", "34": "B09993241", "35": "B09993242", "36": "B09993243", "37": "B09993244", "38": "B09993245", "39": "B09993246", "40": "B09993247", "41": "B09993248", "42": "B09993249", "43": "B09993250", "44": "B09993251", "45": "B09993252", "46": "B09993253", "47": "B09993254", "48": "B09993255", "49": "B09993256", "50": "B09993257" } },
-        "Sapato Cadarço": { limite: 1, tamanhos: { "33": "B09993260", "34": "B09993261", "35": "B09993262", "36": "B09993263", "37": "B09993264", "38": "B09993265", "39": "B09993266", "40": "B09993267", "41": "B09993268", "42": "B09993269", "43": "B09993270", "44": "B09993271", "45": "B09993272", "46": "B09993273", "47": "B09993274", "48": "B09993275", "49": "B09994276", "50": "B09995277" } },
-        "Palmilha": { limite: 2, tamanhos: { "33": "B09992340", "34": "B09992341", "35": "B09992342", "36": "B09992343", "37": "B09992344", "38": "B09992345", "39": "B09992346", "40": "B09992347", "41": "B09992348", "42": "B09992349", "43": "B09992350", "44": "B09992351", "45": "B09992352", "46": "B09992353" } },
-        "Óculos de Proteção": { limite: 1, tamanhos: { "Masculino": "B09991980", "Feminino": "B09991982", "Sobrepor (Grau)": "B09991965" } },
-        "Protetor Auditivo": { limite: 2, tamanhos: { "Plug P": "B09990056", "Plug M": "B09990057", "Plug G": "B09990058", "Tipo Espuma": "B09990051", "Abafador Concha": "B09990060" } },
-        "Creme Protetor": { limite: 1, tamanhos: { "Pote": "B09991010" } },
-        "Protetor Solar": { limite: 1, tamanhos: { "Frasco": "B09991009" } },
-        "Meia": { limite: 6, tamanhos: { "Masculina": "B09992580", "Feminina": "B09992780" } },
-        "Diversos": { limite: 1, tamanhos: { "Redinha": "B09992065", "Máscara Pano": "B09992410", "Cadarço": "B09990935" } }
-    };
-
-    let listaExportacao = [];
-    let statusTurmas = JSON.parse(localStorage.getItem('statusSolicitacoes')) || {};
-    const ESTADOS = ["Não Iniciado", "Aguardando Coord. Segurança","Aguardando Tec. Segurança", "Aguardando Almox.", "Pronto para retirada"];
-
-    window.onload = function() {
-        const selTipo = document.getElementById('tipoPeca');
-        Object.keys(catalogo).sort().forEach(item => { let opt = document.createElement('option'); opt.value = item; opt.text = item; selTipo.appendChild(opt); });
-    };
-
-    // =========================================================================
-    // 4. LÓGICA DO SISTEMA PRINCIPAL
-    // =========================================================================
-    function carregarTurmas() {
-        const turno = document.getElementById('selectTurno').value;
-        const selTurma = document.getElementById('selectTurma');
-        const selAluno = document.getElementById('selectAluno');
-        selTurma.innerHTML = '<option value="">-- Selecione a Turma --</option>'; selAluno.innerHTML = '<option value="">Selecione a turma primeiro</option>';
-        selTurma.disabled = true; selAluno.disabled = true;
-        document.getElementById('displayAluno').style.display = 'none';
-        if (turno) {
-            selTurma.disabled = false;
-            Object.keys(bancoAlunos).forEach(turma => { if (turma.startsWith(turno)) { let opt = document.createElement('option'); opt.value = turma; opt.text = turma; selTurma.appendChild(opt); } });
-        }
-    }
-
-    function carregarAlunos() {
-        const turma = document.getElementById('selectTurma').value;
-        const selAluno = document.getElementById('selectAluno');
-        selAluno.innerHTML = '<option value="">-- Selecione o Aluno --</option>';
-        if (turma && bancoAlunos[turma]) {
-            selAluno.disabled = false;
-            bancoAlunos[turma].forEach((aluno, index) => { let opt = document.createElement('option'); opt.value = index; opt.text = aluno.nome; selAluno.appendChild(opt); });
-        } else { selAluno.disabled = true; }
-    }
-
-    function mostrarInfoAluno() {
-        const turma = document.getElementById('selectTurma').value;
-        const idx = document.getElementById('selectAluno').value;
-        const display = document.getElementById('displayAluno');
-        if (turma && idx !== "") {
-            const aluno = bancoAlunos[turma][idx];
-            display.style.display = 'block'; display.innerHTML = `Registro (Reg): <strong>${aluno.codigo}</strong>`;
-        } else { display.style.display = 'none'; }
-    }
-
-    function carregarTamanhos() {
-        const tipo = document.getElementById('tipoPeca').value;
-        const selTam = document.getElementById('tamanhoPeca');
-        const selQtd = document.getElementById('qtdPeca');
-        const btn = document.getElementById('btnAdd');
-        selTam.innerHTML = '<option value="">-- Selecione --</option>'; selQtd.innerHTML = '<option value="">-</option>';
-        selQtd.disabled = true; selTam.disabled = true; btn.disabled = true;
-        document.getElementById('displayPeca').style.display = 'none';
-        if (tipo && catalogo[tipo]) {
-            selTam.disabled = false;
-            for (let tam in catalogo[tipo].tamanhos) { let opt = document.createElement('option'); opt.value = tam; opt.text = tam; selTam.appendChild(opt); }
-        }
-    }
-
-    function atualizarInfoPeca() {
-        const tipo = document.getElementById('tipoPeca').value;
-        const tam = document.getElementById('tamanhoPeca').value;
-        const display = document.getElementById('displayPeca');
-        const selQtd = document.getElementById('qtdPeca');
-        const btn = document.getElementById('btnAdd');
-        if (tipo && tam) {
-            const dados = catalogo[tipo];
-            const codigoB09 = dados.tamanhos[tam];
-            display.style.display = 'block'; display.innerHTML = `Código do Item: <strong>${codigoB09}</strong> | Limite: ${dados.limite}`;
-            selQtd.innerHTML = '';
-            for (let i = 1; i <= dados.limite; i++) { let opt = document.createElement('option'); opt.value = i; opt.text = i; selQtd.appendChild(opt); }
-            selQtd.disabled = false; btn.disabled = false;
-        }
-    }
-
-    function adicionarItem() {
-        const turma = document.getElementById('selectTurma').value;
-        const idxAluno = document.getElementById('selectAluno').value;
-        const tipo = document.getElementById('tipoPeca').value;
-        const tam = document.getElementById('tamanhoPeca').value;
-        const qtd = document.getElementById('qtdPeca').value;
-        if (!turma || idxAluno === "" || !tipo || !tam) return alert("Preencha todos os campos.");
-        const alunoObj = bancoAlunos[turma][idxAluno];
-        const codigoB09 = catalogo[tipo].tamanhos[tam];
-        listaExportacao.push({
-            id: Date.now(),
-            turma: turma,
-            nomeAluno: alunoObj.nome,
-            regAluno: alunoObj.codigo,
-            peca: tipo,
-            tamanho: tam,
-            codigoItem: codigoB09,
-            quantidade: parseInt(qtd)
-        });
-        atualizarTabelaSite();
-    }
-
-    function removerItem(id) {
-        listaExportacao = listaExportacao.filter(item => item.id !== id);
-        atualizarTabelaSite();
-    }
-
-    function atualizarTabelaSite() {
-        const tbody = document.querySelector("#tabelaSite tbody");
-        tbody.innerHTML = "";
-        if (listaExportacao.length === 0) { tbody.innerHTML = "<tr><td colspan='5' style='color:#999; padding:20px;'>Nenhum item adicionado.</td></tr>"; return; }
-        listaExportacao.sort((a, b) => a.turma.localeCompare(b.turma) || a.nomeAluno.localeCompare(b.nomeAluno));
-        listaExportacao.forEach(item => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td><strong>${item.turma}</strong></td><td>${item.nomeAluno} <br><small>Reg: ${item.regAluno}</small></td><td>${item.peca} (${item.tamanho})<br><small>${item.codigoItem}</small></td><td>${item.quantidade}</td><td><button class="btn-remove" onclick="removerItem(${item.id})"><i class="fa-solid fa-trash"></i></button></td>`;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function enviarEmailReal() {
-        if (listaExportacao.length === 0) return alert("A lista está vazia! Adicione itens antes de enviar.");
-        
-        const overlay = document.getElementById('loadingOverlay');
-        const errorDisplay = document.getElementById('errorDisplay');
-        const btnClose = document.getElementById('btnCloseError');
-        overlay.style.display = 'flex'; errorDisplay.style.display = 'none'; btnClose.style.display = 'none';
-        
-        let tabelaHTML = `
-        <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px; color: #333; text-align: center;">
-            <thead>
-                <tr style="background-color: #004e92; color: #ffffff;">
-                    <th style="border: 1px solid #dddddd; padding: 8px;">Turma</th>
-                    <th style="border: 1px solid #dddddd; padding: 8px;">Reg. Solicitante</th>
-                    <th style="border: 1px solid #dddddd; padding: 8px;">C.C. Solicitante</th>
-                    <th style="border: 1px solid #dddddd; padding: 8px;">Numero do Item</th>
-                    <th style="border: 1px solid #dddddd; padding: 8px;">Quantidade</th>
-                    <th style="border: 1px solid #dddddd; padding: 8px;">Clas Contabil2</th>
-                </tr>
-            </thead>
-            <tbody>`;
-
-        listaExportacao.forEach(item => {
-            tabelaHTML += `
-                <tr style="border-bottom: 1px solid #dddddd;">
-                    <td style="border: 1px solid #dddddd; padding: 8px; font-weight: bold;">${item.turma}</td>
-                    <td style="border: 1px solid #dddddd; padding: 8px;">${item.regAluno}</td>
-                    <td style="border: 1px solid #dddddd; padding: 8px;">${CENTRO_CUSTO}</td>
-                    <td style="border: 1px solid #dddddd; padding: 8px;">${item.codigoItem}</td>
-                    <td style="border: 1px solid #dddddd; padding: 8px;">${item.quantidade}</td>
-                    <td style="border: 1px solid #dddddd; padding: 8px;">${CENTRO_CUSTO}</td>
-                </tr>`;
-        });
-        tabelaHTML += `</tbody></table>`;
-
-        const turmasUnicas = [...new Set(listaExportacao.map(i => i.turma))].join(", ");
-        const params = { turma: turmasUnicas, mensagem: tabelaHTML, data: new Date().toLocaleString() };
-
-        emailjs.send(EMAIL_SERVICE_ID, EMAIL_TEMPLATE_ID, params)
-            .then(function(response) {
-                alert("✅ E-mail enviado com sucesso!");
-                const turmasAfetadas = [...new Set(listaExportacao.map(item => item.turma))];
-                turmasAfetadas.forEach(turma => { statusTurmas[turma] = { status: 1, data: new Date().toLocaleString() }; });
-                localStorage.setItem('statusSolicitacoes', JSON.stringify(statusTurmas));
-                gerarExcel();
-                listaExportacao = [];
-                atualizarTabelaSite();
-                overlay.style.display = 'none';
-            }, function(error) {
-                document.querySelector('#loadingOverlay h3').innerText = "❌ Falha no Envio";
-                errorDisplay.style.display = 'block'; btnClose.style.display = 'block';
-                errorDisplay.innerText = "Erro: " + JSON.stringify(error);
-            });
-    }
-
-    function gerarExcel() {
-        const dadosFormatados = listaExportacao.map(item => ({
-            "Oper": "", "Reg. Solicitante": parseInt(item.regAluno), "Reg. Responsavel": "", "C.C. Solicitante": parseInt(CENTRO_CUSTO), "Almo (DACC)": "", "Numero do Item": item.codigoItem, "Quantidade": item.quantidade, "Clas Contabil TD": "", "Clas Contabil2": parseInt(CENTRO_CUSTO), "Clas Contabil Id": "", "Observação": `Solicitacao Turma ${item.turma}`
-        }));
-        const ws = XLSX.utils.json_to_sheet(dadosFormatados, { header: ["Oper", "Reg. Solicitante", "Reg. Responsavel", "C.C. Solicitante", "Almo (DACC)", "Numero do Item", "Quantidade", "Clas Contabil TD", "Clas Contabil2", "Clas Contabil Id", "Observação"] });
-        ws['!cols'] = [{wch:5}, {wch:15}, {wch:15}, {wch:15}, {wch:10}, {wch:20}, {wch:10}, {wch:15}, {wch:15}, {wch:10}, {wch:30}];
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Requisicoes_SIL_AEPI");
-        XLSX.writeFile(wb, "Requisicao_EPIs_Exportacao.xlsx");
-    }
-
-    // =========================================================================
-    // 5. FUNÇÕES ADMINISTRATIVAS (STATUS + EDIÇÃO)
-    // =========================================================================
-    
-   // --- GESTÃO DE STATUS (ATUALIZADO) ---
-
-    function abrirDashboard() {
-        const modal = document.getElementById('dashboardModal');
-        const tbody = document.querySelector("#tabelaStatus tbody");
-        const headerAdm = document.getElementById('headerAcoesAdm');
-        
-        // 1. Controle do Cabeçalho da Tabela
-        if (headerAdm) {
-            headerAdm.style.display = isAdmin ? "table-cell" : "none";
-        }
-
-        tbody.innerHTML = "";
-        
-        // 2. Pega TODAS as turmas
-        const todasAsTurmas = Object.keys(bancoAlunos).sort();
-        
-        if (todasAsTurmas.length === 0) {
-            const colSpan = isAdmin ? 4 : 3;
-            tbody.innerHTML = `<tr><td colspan='${colSpan}'>Nenhuma turma cadastrada.</td></tr>`;
-        } else {
-            todasAsTurmas.forEach(turma => {
-                let dados = statusTurmas[turma];
-                // Se não tiver dados, cria visualmente como "Não Iniciado"
-                if (!dados) {
-                    dados = { status: 0, data: "-" };
-                }
-
-                const classeStatus = `status-${dados.status}`;
-                const textoStatus = ESTADOS[dados.status];
+    <div class="modal-overlay" id="adminModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="fecharModais()">&times;</span>
+            <h2 style="color: var(--text-main); margin-bottom: 5px;"><i class="fa-solid fa-toolbox"></i> Painel Admin</h2>
+            <p style="color: var(--text-light); font-size: 0.9rem; margin-bottom: 20px;">Gerencie turmas e alunos.</p>
+            
+            <label style="color: var(--primary);">1. Selecione a Turma Alvo:</label>
+            <select id="admSelectTurma" onchange="admCarregarTurmaEAlunos()" style="border-color: var(--primary);">
+                <option value="">-- Selecione uma Turma --</option>
+            </select>
+            
+            <div id="admClassArea" class="adm-section" style="display:none;">
+                <span class="adm-header"><i class="fa-solid fa-gear"></i> Opções da Turma</span>
                 
-                // 3. Coluna de Ações (Sem o texto "Mudar")
-                let colunaAcoesHtml = "";
-                if (isAdmin) {
-                    colunaAcoesHtml = `
-                        <td>
-                            <div class="adm-controls" style="display:flex; justify-content: center; gap: 10px;">
-                                <button class="btn-mini btn-back" onclick="alterarStatus('${turma}', -1)" title="Voltar"><i class="fa-solid fa-arrow-left"></i></button>
-                                <button class="btn-mini btn-next" onclick="alterarStatus('${turma}', 1)" title="Avançar"><i class="fa-solid fa-arrow-right"></i></button>
-                            </div>
-                        </td>
-                    `;
-                }
+                <label>Renomear Turma:</label>
+                <div style="display: flex; gap: 5px; margin-bottom: 15px;">
+                    <input type="text" id="admInputTurmaNome" style="margin:0;">
+                    <button onclick="admRenomearTurma()" class="btn btn-primary" title="Salvar Nome"><i class="fa-solid fa-check"></i></button>
+                </div>
 
+                <button onclick="admApagarAlunosDaTurma()" class="btn btn-danger" style="width:100%; justify-content: center; background: white; border: 1px solid var(--danger); color: var(--danger);">
+                    <i class="fa-solid fa-trash-can"></i> Esvaziar Turma (Apagar Todos)
+                </button>
+            </div>
+
+            <div id="admAddArea" class="adm-section" style="display:none; border-left: 4px solid var(--success);">
+                <span class="adm-header" style="color: var(--success);"><i class="fa-solid fa-user-plus"></i> Adicionar Novo Aluno</span>
+                
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="margin-top:0;">Nome Completo</label>
+                        <input type="text" id="admNewNome" placeholder="Ex: João Silva" style="margin:0;">
+                    </div>
+                    <div>
+                        <label style="margin-top:0;">Matrícula</label>
+                        <input type="text" id="admNewReg" placeholder="Ex: 9001" style="margin:0;">
+                    </div>
+                </div>
+                
+                <button onclick="admAdicionarAluno()" class="btn btn-success" style="width:100%; margin-top: 15px; justify-content: center;">
+                    <i class="fa-solid fa-plus"></i> Cadastrar Aluno
+                </button>
+            </div>
+
+            <div id="admEditContainer" class="adm-section" style="display:none;">
+                <span class="adm-header"><i class="fa-solid fa-pen-to-square"></i> Editar Aluno Existente</span>
+                
+                <select id="admSelectAluno" onchange="admPreencherInputs()">
+                    <option value="">-- Selecione o Aluno --</option>
+                </select>
+                
+                <div id="admEditArea" style="display:none; margin-top:15px; padding-top:15px; border-top: 1px dashed #ccc;">
+                    <label>Editar Nome:</label>
+                    <input type="text" id="admInputNome">
+                    
+                    <label>Editar Matrícula:</label>
+                    <input type="text" id="admInputReg">
+                    
+                    <button onclick="admSalvarAluno()" class="btn btn-primary" style="width:100%; margin-top:10px; justify-content: center;">
+                        <i class="fa-solid fa-floppy-disk"></i> Salvar Alterações
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ======================== CONFIGURAÇÃO ========================
+        const EMAILS_ADM = ["gustavo.s.rodrigues10@aluno.senai.br", "admin@teste.com"];
+        const CENTRO_CUSTO = "9464"; 
+        
+        // Firebase Config (Mantenha suas chaves originais)
+        const firebaseConfig = {
+            apiKey: "AIzaSyA0v_e_jug-LitdrSSechKrCmXAKaBA00o",
+            authDomain: "gestaoepi-bc265.firebaseapp.com",
+            projectId: "gestaoepi-bc265",
+            storageBucket: "gestaoepi-bc265.firebasestorage.app",
+            messagingSenderId: "100298795455",
+            appId: "1:100298795455:web:85398ec8b014790ae9590a"
+        };
+
+        const EMAIL_SERVICE_ID = "service_2tp3jlm"; 
+        const EMAIL_TEMPLATE_ID = "template_5kplq56"; 
+        const EMAIL_PUBLIC_KEY = "zDXgHHECIycy13U3H"; 
+
+        // Inicialização
+        let auth;
+        let currentUserEmail = "";
+        let isAdmin = false;
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            emailjs.init(EMAIL_PUBLIC_KEY);
+        } catch(e) { console.error("Erro config:", e); }
+
+        // ======================== DADOS ========================
+        let bancoAlunos = JSON.parse(localStorage.getItem('db_alunos_v2'));
+
+        // Se vazio, cria estrutura inicial (Backup)
+        if (!bancoAlunos) {
+            const gerar = (n, cod) => Array.from({length:10}, (_,i)=>({nome:`Aluno ${i+1} da ${n}`, codigo:`${cod+i}`}));
+            bancoAlunos = { 
+                "T1A": gerar("T1A", 8000), "T1B": gerar("T1B", 8100), 
+                "M2A": gerar("M2A", 8200), "T3A": gerar("T3A", 8300) 
+            };
+            localStorage.setItem('db_alunos_v2', JSON.stringify(bancoAlunos));
+        }
+
+        const catalogo = {
+            "Calça Masculina": { limite: 3, tamanhos: { "36": "B09991539", "38": "B09991540", "40": "B09991541", "42": "B09991542", "44": "B09991543", "46": "B09991544", "48": "B09991545", "50": "B09991546", "52": "B09991146", "54": "B09991547", "56": "B09991548", "60": "B09991549" } },
+            "Calça Feminina": { limite: 3, tamanhos: { "32": "B09991550", "34": "B09991551", "36": "B09991552", "38": "B09991553", "40": "B09991554", "42": "B09991555", "44": "B09991556", "46": "B09991557", "48": "B09991558", "50": "B09991559", "52": "B09991560", "54": "B09991561" } },
+            "Camisa Polo Masculina": { limite: 3, tamanhos: { "P": "B09990435", "M": "B09990436", "G": "B09990437", "GG": "B09990438", "SGG": "B09990439", "EXG": "B09990440" } },
+            "Camisa Polo Feminina": { limite: 3, tamanhos: { "P": "B09993325", "M": "B09993326", "G": "B09993327", "GG": "B09993328", "SGG": "B09993329", "EXG": "B09993330" } },
+            "Bermuda": { limite: 2, tamanhos: { "36": "B09991521", "40": "B09991522", "44": "B09991523", "48": "B09991524", "52": "B09991525", "56": "B09991526", "60": "B09991527" } },
+            "Sapato Elástico (Bota)": { limite: 1, tamanhos: { "33": "B09993240", "34": "B09993241", "35": "B09993242", "36": "B09993243", "37": "B09993244", "38": "B09993245", "39": "B09993246", "40": "B09993247", "41": "B09993248", "42": "B09993249", "43": "B09993250", "44": "B09993251", "45": "B09993252", "46": "B09993253", "47": "B09993254", "48": "B09993255", "49": "B09993256", "50": "B09993257" } },
+            "Sapato Cadarço": { limite: 1, tamanhos: { "33": "B09993260", "34": "B09993261", "35": "B09993262", "36": "B09993263", "37": "B09993264", "38": "B09993265", "39": "B09993266", "40": "B09993267", "41": "B09993268", "42": "B09993269", "43": "B09993270", "44": "B09993271", "45": "B09993272", "46": "B09993273", "47": "B09993274", "48": "B09993275", "49": "B09994276", "50": "B09995277" } },
+            "Óculos de Proteção": { limite: 1, tamanhos: { "Masculino": "B09991980", "Feminino": "B09991982", "Sobrepor (Grau)": "B09991965" } }
+        };
+
+        let listaExportacao = [];
+        let statusTurmas = JSON.parse(localStorage.getItem('statusSolicitacoes')) || {};
+        const ESTADOS = ["Não Iniciado", "Coord. Segurança", "Téc. Segurança", "Almoxarifado", "Pronto/Entregue"];
+
+        // ======================== AUTH & INICIALIZAÇÃO ========================
+        window.onload = function() {
+            // Carrega Catálogo no Select
+            const selTipo = document.getElementById('tipoPeca');
+            Object.keys(catalogo).sort().forEach(item => { 
+                let opt = document.createElement('option'); opt.value = item; opt.text = item; selTipo.appendChild(opt); 
+            });
+        };
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUserEmail = user.email;
+                isAdmin = EMAILS_ADM.includes(currentUserEmail); 
+
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('appContent').style.display = 'block';
+                document.getElementById('userName').innerText = user.displayName || "Usuário";
+                document.getElementById('userAvatar').src = user.photoURL || `https://ui-avatars.com/api/?name=${user.email}&background=random`;
+
+                if (isAdmin) document.getElementById('btnAdminPanel').style.display = 'inline-flex';
+            } else {
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('appContent').style.display = 'none';
+            }
+        });
+
+        function fazerLoginGoogle() {
+            auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
+            .then(() => {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                return auth.signInWithPopup(provider);
+            })
+            .catch(error => alert("Erro no Login: " + error.message));
+        }
+
+        function fazerLogout() { auth.signOut().then(() => location.reload()); }
+
+        // ======================== LÓGICA PRINCIPAL (USER) ========================
+        function carregarTurmas() {
+            const turno = document.getElementById('selectTurno').value;
+            const selTurma = document.getElementById('selectTurma');
+            const selAluno = document.getElementById('selectAluno');
+            
+            selTurma.innerHTML = '<option value="">-- Selecione a Turma --</option>'; 
+            selAluno.innerHTML = '<option value="">Aguardando Turma...</option>';
+            selTurma.disabled = true; selAluno.disabled = true;
+            document.getElementById('displayAluno').style.display = 'none';
+
+            if (turno) {
+                selTurma.disabled = false;
+                Object.keys(bancoAlunos).sort().forEach(turma => { 
+                    if (turma.startsWith(turno)) { 
+                        let opt = document.createElement('option'); opt.value = turma; opt.text = turma; selTurma.appendChild(opt); 
+                    } 
+                });
+            }
+        }
+
+        function carregarAlunos() {
+            const turma = document.getElementById('selectTurma').value;
+            const selAluno = document.getElementById('selectAluno');
+            selAluno.innerHTML = '<option value="">-- Selecione o Aluno --</option>';
+            
+            if (turma && bancoAlunos[turma]) {
+                selAluno.disabled = false;
+                bancoAlunos[turma].forEach((aluno, index) => { 
+                    let opt = document.createElement('option'); opt.value = index; opt.text = aluno.nome; selAluno.appendChild(opt); 
+                });
+            } else { selAluno.disabled = true; }
+        }
+
+        function mostrarInfoAluno() {
+            const turma = document.getElementById('selectTurma').value;
+            const idx = document.getElementById('selectAluno').value;
+            const display = document.getElementById('displayAluno');
+            
+            if (turma && idx !== "") {
+                const aluno = bancoAlunos[turma][idx];
+                display.style.display = 'block'; 
+                display.innerHTML = `<i class="fa-solid fa-id-card"></i> Matrícula: <strong>${aluno.codigo}</strong>`;
+            } else { display.style.display = 'none'; }
+        }
+
+        function carregarTamanhos() {
+            const tipo = document.getElementById('tipoPeca').value;
+            const selTam = document.getElementById('tamanhoPeca');
+            const selQtd = document.getElementById('qtdPeca');
+            const btn = document.getElementById('btnAdd');
+            
+            selTam.innerHTML = '<option value="">-- Selecione --</option>'; 
+            selQtd.innerHTML = '<option value="">-</option>';
+            selQtd.disabled = true; selTam.disabled = true; btn.disabled = true;
+            document.getElementById('displayPeca').style.display = 'none';
+
+            if (tipo && catalogo[tipo]) {
+                selTam.disabled = false;
+                for (let tam in catalogo[tipo].tamanhos) { 
+                    let opt = document.createElement('option'); opt.value = tam; opt.text = tam; selTam.appendChild(opt); 
+                }
+            }
+        }
+
+        function atualizarInfoPeca() {
+            const tipo = document.getElementById('tipoPeca').value;
+            const tam = document.getElementById('tamanhoPeca').value;
+            const display = document.getElementById('displayPeca');
+            const selQtd = document.getElementById('qtdPeca');
+            const btn = document.getElementById('btnAdd');
+
+            if (tipo && tam) {
+                const dados = catalogo[tipo];
+                display.style.display = 'block'; 
+                display.innerHTML = `<i class="fa-solid fa-barcode"></i> Código: <strong>${dados.tamanhos[tam]}</strong> <br> <i class="fa-solid fa-ban"></i> Limite: ${dados.limite} un.`;
+                
+                selQtd.innerHTML = '';
+                for (let i = 1; i <= dados.limite; i++) { 
+                    let opt = document.createElement('option'); opt.value = i; opt.text = i; selQtd.appendChild(opt); 
+                }
+                selQtd.disabled = false; btn.disabled = false;
+            }
+        }
+
+        function adicionarItem() {
+            const turma = document.getElementById('selectTurma').value;
+            const idxAluno = document.getElementById('selectAluno').value;
+            const tipo = document.getElementById('tipoPeca').value;
+            const tam = document.getElementById('tamanhoPeca').value;
+            const qtd = document.getElementById('qtdPeca').value;
+
+            if (!turma || idxAluno === "" || !tipo || !tam) return alert("Preencha todos os campos.");
+
+            const alunoObj = bancoAlunos[turma][idxAluno];
+            const codigoB09 = catalogo[tipo].tamanhos[tam];
+
+            listaExportacao.push({
+                id: Date.now(),
+                turma: turma,
+                nomeAluno: alunoObj.nome,
+                regAluno: alunoObj.codigo,
+                peca: tipo,
+                tamanho: tam,
+                codigoItem: codigoB09,
+                quantidade: parseInt(qtd)
+            });
+
+            atualizarTabelaSite();
+            // Feedback Visual
+            const btn = document.getElementById('btnAdd');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-check"></i> Adicionado!`;
+            btn.classList.replace('btn-primary', 'btn-success');
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.replace('btn-success', 'btn-primary');
+            }, 1500);
+        }
+
+        function removerItem(id) {
+            listaExportacao = listaExportacao.filter(item => item.id !== id);
+            atualizarTabelaSite();
+        }
+
+        function atualizarTabelaSite() {
+            const tbody = document.querySelector("#tabelaSite tbody");
+            const btnSend = document.getElementById('btnSend');
+            tbody.innerHTML = "";
+
+            if (listaExportacao.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; color:#999; padding:30px;'>Nenhum item adicionado à lista.</td></tr>";
+                btnSend.disabled = true;
+                return;
+            }
+
+            btnSend.disabled = false;
+            listaExportacao.sort((a, b) => a.turma.localeCompare(b.turma) || a.nomeAluno.localeCompare(b.nomeAluno));
+
+            listaExportacao.forEach(item => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><strong>${turma}</strong></td>
-                    <td><span class="status-badge ${classeStatus}">${textoStatus}</span></td>
-                    <td><small>${dados.data}</small></td>
-                    ${colunaAcoesHtml} 
-                `;
+                    <td><strong>${item.turma}</strong></td>
+                    <td>${item.nomeAluno}<br><small style="color:#888">${item.regAluno}</small></td>
+                    <td>${item.peca} (${item.tamanho})<br><small style="color:#888">${item.codigoItem}</small></td>
+                    <td>${item.quantidade}</td>
+                    <td style="text-align:center;">
+                        <button class="btn btn-danger" style="padding: 5px 10px;" onclick="removerItem(${item.id})"><i class="fa-solid fa-trash"></i></button>
+                    </td>`;
                 tbody.appendChild(tr);
             });
         }
-        
-        modal.style.display = 'flex';
-    }
 
-    function alterarStatus(turma, direcao) {
-        // Se não existir registro, cria agora como 0
-        if (!statusTurmas[turma]) {
-            statusTurmas[turma] = { status: 0, data: "-" };
-        }
+        // ======================== ENVIO E EXCEL ========================
+        function enviarEmailReal() {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.style.display = 'flex';
 
-        let statusAtual = statusTurmas[turma].status;
-        let novoStatus = statusAtual + direcao;
-        let maxStatus = ESTADOS.length - 1;
-        let novaData = new Date().toLocaleString();
+            let tabelaHTML = `
+            <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 12px; border: 1px solid #ccc;">
+                <tr style="background-color: #4361ee; color: white;">
+                    <th style="padding:8px; border:1px solid #ccc;">Turma</th>
+                    <th style="padding:8px; border:1px solid #ccc;">Reg</th>
+                    <th style="padding:8px; border:1px solid #ccc;">C.C.</th>
+                    <th style="padding:8px; border:1px solid #ccc;">Item</th>
+                    <th style="padding:8px; border:1px solid #ccc;">Qtd</th>
+                </tr>`;
 
-        // --- LÓGICA DE REINÍCIO (LOOP) ---
-        
-        // Se passou do máximo, volta para o zero e reseta a data
-        if (novoStatus > maxStatus) {
-            novoStatus = 0;
-            novaData = "-"; 
-        } 
-        // Se tentou voltar antes do zero, mantém no zero
-        else if (novoStatus < 0) {
-            novoStatus = 0;
-            // Se já estava no 0, mantém a data atual (ou "-")
-            novaData = statusTurmas[turma].data; 
-        }
-
-        // Se o novo status for 0 (por reset ou loop), garantimos que a data seja "-"
-        if (novoStatus === 0) {
-            novaData = "-";
-        }
-
-        // Atualiza e Salva
-        statusTurmas[turma].status = novoStatus;
-        statusTurmas[turma].data = novaData;
-        
-        localStorage.setItem('statusSolicitacoes', JSON.stringify(statusTurmas));
-        abrirDashboard(); 
-    }
-
-    // --- GESTÃO DE DADOS (TURMAS E ALUNOS) ---
-    function abrirAdminPanel() {
-        if(!isAdmin) return;
-        document.getElementById('adminModal').style.display = 'flex';
-        const sel = document.getElementById('admSelectTurma');
-        sel.innerHTML = '<option value="">-- Selecione --</option>';
-        Object.keys(bancoAlunos).sort().forEach(t => {
-            let opt = document.createElement('option');
-            opt.value = t; opt.text = t;
-            sel.appendChild(opt);
-        });
-    }
-
-    function admCarregarTurmaEAlunos() {
-        const turma = document.getElementById('admSelectTurma').value;
-        const selAl = document.getElementById('admSelectAluno');
-        
-        document.getElementById('admEditArea').style.display = 'none';
-        document.getElementById('admClassArea').style.display = 'none';
-        selAl.innerHTML = '<option value="">-- Selecione --</option>';
-        selAl.disabled = true;
-
-        if(turma) {
-            // Preenche nome da turma para edição
-            document.getElementById('admInputTurmaNome').value = turma;
-            document.getElementById('admClassArea').style.display = 'block';
-
-            // Preenche alunos
-            selAl.disabled = false;
-            bancoAlunos[turma].forEach((aluno, index) => {
-                let opt = document.createElement('option');
-                opt.value = index; opt.text = aluno.nome;
-                selAl.appendChild(opt);
+            listaExportacao.forEach(item => {
+                tabelaHTML += `
+                    <tr>
+                        <td style="padding:8px; border:1px solid #ccc;">${item.turma}</td>
+                        <td style="padding:8px; border:1px solid #ccc;">${item.regAluno}</td>
+                        <td style="padding:8px; border:1px solid #ccc;">${CENTRO_CUSTO}</td>
+                        <td style="padding:8px; border:1px solid #ccc;">${item.codigoItem}</td>
+                        <td style="padding:8px; border:1px solid #ccc;">${item.quantidade}</td>
+                    </tr>`;
             });
-        }
-    }
+            tabelaHTML += `</table>`;
 
-    function admPreencherInputs() {
-        const turma = document.getElementById('admSelectTurma').value;
-        const idx = document.getElementById('admSelectAluno').value;
-        if(turma && idx !== "") {
+            const turmasUnicas = [...new Set(listaExportacao.map(i => i.turma))].join(", ");
+            const params = { turma: turmasUnicas, mensagem: tabelaHTML, data: new Date().toLocaleString() };
+
+            emailjs.send(EMAIL_SERVICE_ID, EMAIL_TEMPLATE_ID, params)
+                .then(() => {
+                    const turmasAfetadas = [...new Set(listaExportacao.map(item => item.turma))];
+                    turmasAfetadas.forEach(turma => { 
+                        statusTurmas[turma] = { status: 1, data: new Date().toLocaleString() }; 
+                    });
+                    localStorage.setItem('statusSolicitacoes', JSON.stringify(statusTurmas));
+                    
+                    gerarExcel();
+                    listaExportacao = [];
+                    atualizarTabelaSite();
+                    
+                    overlay.style.display = 'none';
+                    alert("✅ Sucesso! E-mail enviado e Excel gerado.");
+                })
+                .catch(error => {
+                    overlay.style.display = 'none';
+                    alert("❌ Erro ao enviar: " + JSON.stringify(error));
+                });
+        }
+
+        function gerarExcel() {
+            const dados = listaExportacao.map(item => ({
+                "Oper": "", "Reg. Solicitante": parseInt(item.regAluno), "Reg. Responsavel": "", 
+                "C.C. Solicitante": parseInt(CENTRO_CUSTO), "Almo (DACC)": "", 
+                "Numero do Item": item.codigoItem, "Quantidade": item.quantidade, 
+                "Clas Contabil2": parseInt(CENTRO_CUSTO), "Observação": `Turma ${item.turma}`
+            }));
+            const ws = XLSX.utils.json_to_sheet(dados);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Requisicao");
+            XLSX.writeFile(wb, "Requisicao_EPIs.xlsx");
+        }
+
+        // ======================== DASHBOARD & STATUS ========================
+        function abrirDashboard() {
+            const modal = document.getElementById('dashboardModal');
+            const tbody = document.querySelector("#tabelaStatus tbody");
+            const headerAdm = document.getElementById('headerAcoesAdm');
+            
+            headerAdm.style.display = isAdmin ? "table-cell" : "none";
+            tbody.innerHTML = "";
+            
+            const todasAsTurmas = Object.keys(bancoAlunos).sort();
+
+            if (todasAsTurmas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan='${isAdmin ? 4 : 3}' style="text-align:center; padding:20px;">Nenhuma turma cadastrada.</td></tr>`;
+            } else {
+                todasAsTurmas.forEach(turma => {
+                    let dados = statusTurmas[turma] || { status: 0, data: "-" };
+                    
+                    let actionsHtml = "";
+                    if (isAdmin) {
+                        actionsHtml = `
+                            <td style="text-align:center;">
+                                <button class="btn btn-danger" style="padding:4px 8px; font-size:0.7rem;" onclick="alterarStatus('${turma}', -1)"><i class="fa-solid fa-arrow-left"></i></button>
+                                <button class="btn btn-success" style="padding:4px 8px; font-size:0.7rem;" onclick="alterarStatus('${turma}', 1)"><i class="fa-solid fa-arrow-right"></i></button>
+                            </td>`;
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${turma}</strong></td>
+                        <td><span class="status-badge st-${dados.status}">${ESTADOS[dados.status]}</span></td>
+                        <td><small>${dados.data}</small></td>
+                        ${actionsHtml}
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+            modal.style.display = 'flex';
+        }
+
+        function alterarStatus(turma, direcao) {
+            if (!statusTurmas[turma]) statusTurmas[turma] = { status: 0, data: "-" };
+            
+            let novoStatus = statusTurmas[turma].status + direcao;
+            
+            // Loop de Status
+            if (novoStatus >= ESTADOS.length) { novoStatus = 0; statusTurmas[turma].data = "-"; }
+            else if (novoStatus < 0) { novoStatus = 0; }
+            else { statusTurmas[turma].data = new Date().toLocaleString(); }
+
+            statusTurmas[turma].status = novoStatus;
+            localStorage.setItem('statusSolicitacoes', JSON.stringify(statusTurmas));
+            abrirDashboard();
+        }
+
+        // ======================== PAINEL ADMIN (ATUALIZADO) ========================
+        function abrirAdminPanel() {
+            if(!isAdmin) return;
+            document.getElementById('adminModal').style.display = 'flex';
+            
+            // Carrega Select Principal
+            const sel = document.getElementById('admSelectTurma');
+            sel.innerHTML = '<option value="">-- Selecione a Turma --</option>';
+            Object.keys(bancoAlunos).sort().forEach(t => {
+                let opt = document.createElement('option'); opt.value = t; opt.text = t; sel.appendChild(opt);
+            });
+
+            // Reseta visibilidade das seções
+            document.getElementById('admClassArea').style.display = 'none';
+            document.getElementById('admAddArea').style.display = 'none';
+            document.getElementById('admEditContainer').style.display = 'none';
+        }
+
+        function admCarregarTurmaEAlunos() {
+            const turma = document.getElementById('admSelectTurma').value;
+            const areas = [document.getElementById('admClassArea'), document.getElementById('admAddArea'), document.getElementById('admEditContainer')];
+            
+            if(!turma) {
+                areas.forEach(a => a.style.display = 'none');
+                return;
+            }
+
+            // Mostra todas as áreas
+            areas.forEach(a => a.style.display = 'block');
+            
+            // 1. Preenche Nome
+            document.getElementById('admInputTurmaNome').value = turma;
+            
+            // 2. Limpa Inputs de Adicionar
+            document.getElementById('admNewNome').value = "";
+            document.getElementById('admNewReg').value = "";
+
+            // 3. Carrega Select de Edição
+            const selAl = document.getElementById('admSelectAluno');
+            selAl.innerHTML = '<option value="">-- Selecione o Aluno --</option>';
+            
+            if(bancoAlunos[turma] && bancoAlunos[turma].length > 0) {
+                bancoAlunos[turma].forEach((aluno, index) => {
+                    let opt = document.createElement('option'); opt.value = index; opt.text = aluno.nome; selAl.appendChild(opt);
+                });
+                selAl.disabled = false;
+            } else {
+                let opt = document.createElement('option'); opt.text = "(Turma Vazia)"; selAl.appendChild(opt);
+                selAl.disabled = true;
+            }
+            // Esconde a área de inputs de edição até selecionar um aluno
+            document.getElementById('admEditArea').style.display = 'none';
+        }
+
+        // --- FUNÇÃO 1: RENOMEAR ---
+        function admRenomearTurma() {
+            const antiga = document.getElementById('admSelectTurma').value;
+            const nova = document.getElementById('admInputTurmaNome').value.trim().toUpperCase();
+            
+            if(!nova || nova === antiga) return;
+            if(bancoAlunos[nova]) return alert("Já existe uma turma com esse nome!");
+
+            if(confirm(`Renomear ${antiga} para ${nova}?`)) {
+                bancoAlunos[nova] = bancoAlunos[antiga];
+                delete bancoAlunos[antiga];
+                
+                if(statusTurmas[antiga]) {
+                    statusTurmas[nova] = statusTurmas[antiga];
+                    delete statusTurmas[antiga];
+                    localStorage.setItem('statusSolicitacoes', JSON.stringify(statusTurmas));
+                }
+                
+                localStorage.setItem('db_alunos_v2', JSON.stringify(bancoAlunos));
+                alert("Turma renomeada!");
+                abrirAdminPanel(); // Reinicia modal
+            }
+        }
+
+        // --- FUNÇÃO 2: APAGAR TODOS ---
+        function admApagarAlunosDaTurma() {
+            const turma = document.getElementById('admSelectTurma').value;
+            if(confirm(`PERIGO: Isso removerá TODOS os alunos da turma ${turma}. Continuar?`)) {
+                if(confirm("Confirmação final: A turma ficará vazia.")) {
+                    bancoAlunos[turma] = [];
+                    localStorage.setItem('db_alunos_v2', JSON.stringify(bancoAlunos));
+                    alert("Turma esvaziada.");
+                    admCarregarTurmaEAlunos(); // Atualiza UI
+                }
+            }
+        }
+
+        // --- FUNÇÃO 3: ADICIONAR ALUNO ---
+        function admAdicionarAluno() {
+            const turma = document.getElementById('admSelectTurma').value;
+            const nome = document.getElementById('admNewNome').value.trim();
+            const reg = document.getElementById('admNewReg').value.trim();
+
+            if(!nome || !reg) return alert("Preencha Nome e Matrícula.");
+
+            // Cria array se não existir (caso raro de turma nova vazia)
+            if(!bancoAlunos[turma]) bancoAlunos[turma] = [];
+
+            bancoAlunos[turma].push({ nome: nome, codigo: reg });
+            localStorage.setItem('db_alunos_v2', JSON.stringify(bancoAlunos));
+            
+            alert("Aluno Adicionado!");
+            admCarregarTurmaEAlunos(); // Atualiza UI e limpa inputs
+        }
+
+        // --- FUNÇÃO 4: EDITAR ALUNO ---
+        function admPreencherInputs() {
+            const turma = document.getElementById('admSelectTurma').value;
+            const idx = document.getElementById('admSelectAluno').value;
+            if(idx === "") return;
+
             const aluno = bancoAlunos[turma][idx];
             document.getElementById('admInputNome').value = aluno.nome;
             document.getElementById('admInputReg').value = aluno.codigo;
             document.getElementById('admEditArea').style.display = 'block';
         }
-    }
 
-    function admSalvarAluno() {
-        const turma = document.getElementById('admSelectTurma').value;
-        const idx = document.getElementById('admSelectAluno').value;
-        const novoNome = document.getElementById('admInputNome').value;
-        const novoReg = document.getElementById('admInputReg').value;
+        function admSalvarAluno() {
+            const turma = document.getElementById('admSelectTurma').value;
+            const idx = document.getElementById('admSelectAluno').value;
+            const nome = document.getElementById('admInputNome').value.trim();
+            const reg = document.getElementById('admInputReg').value.trim();
 
-        if(novoNome && novoReg) {
-            bancoAlunos[turma][idx].nome = novoNome;
-            bancoAlunos[turma][idx].codigo = novoReg;
+            if(!nome || !reg) return alert("Dados inválidos.");
+
+            bancoAlunos[turma][idx] = { nome: nome, codigo: reg };
             localStorage.setItem('db_alunos_v2', JSON.stringify(bancoAlunos));
-            alert("✅ Aluno atualizado!");
-            admCarregarTurmaEAlunos(); // Recarrega lista
-        }
-    }
-
-    function admRenomearTurma() {
-        const turmaAntiga = document.getElementById('admSelectTurma').value;
-        const novoNome = document.getElementById('admInputTurmaNome').value.trim();
-
-        if (!novoNome) return alert("Digite um nome válido.");
-        if (novoNome === turmaAntiga) return; // Nada mudou
-        if (bancoAlunos[novoNome]) return alert("Já existe uma turma com esse nome!");
-
-        if (confirm(`Tem certeza que deseja renomear "${turmaAntiga}" para "${novoNome}"?`)) {
-            // 1. Copia dados para nova chave
-            bancoAlunos[novoNome] = bancoAlunos[turmaAntiga];
-            delete bancoAlunos[turmaAntiga]; // Apaga antiga
-
-            // 2. Atualiza Status (se houver)
-            if (statusTurmas[turmaAntiga]) {
-                statusTurmas[novoNome] = statusTurmas[turmaAntiga];
-                delete statusTurmas[turmaAntiga];
-                localStorage.setItem('statusSolicitacoes', JSON.stringify(statusTurmas));
-            }
-
-            // 3. Salva Alunos
-            localStorage.setItem('db_alunos_v2', JSON.stringify(bancoAlunos));
-
-            alert("✅ Turma renomeada com sucesso!");
             
-            // 4. Recarrega interface
-            abrirAdminPanel(); // Recarrega dropdown de turmas
-            // Reseta seleção principal para evitar erros
-            document.getElementById('selectTurno').value = "";
-            carregarTurmas();
+            alert("Dados atualizados!");
+            admCarregarTurmaEAlunos();
         }
-    }
 
-    function fecharModais() {
-        document.getElementById('dashboardModal').style.display = 'none';
-        document.getElementById('adminModal').style.display = 'none';
-    }
+        function fecharModais() {
+            document.getElementById('dashboardModal').style.display = 'none';
+            document.getElementById('adminModal').style.display = 'none';
+        }
 
-    window.onclick = function(e) {
-        if (e.target == document.getElementById('dashboardModal')) fecharModais();
-        if (e.target == document.getElementById('adminModal')) fecharModais();
-    }
-</script>
-
+        window.onclick = function(e) {
+            if (e.target.classList.contains('modal-overlay')) fecharModais();
+        }
+    </script>
 </body>
 </html>

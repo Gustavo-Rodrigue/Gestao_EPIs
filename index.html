@@ -3,52 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestão de EPIs 2026 - Acesso Restrito</title>
+    <title>Gestão EPI 2026</title>
     
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-
+    
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     
     <style>
-        /* ESTILOS VISUAIS */
-        :root { --primary: #004e92; --secondary: #000428; --accent: #00a8cc; --bg: #eef2f3; --success: #27ae60; --danger: #c0392b; }
+        /* --- ESTILO VISUAL --- */
+        :root { --primary: #004e92; --secondary: #000428; --accent: #00a8cc; --bg: #eef2f3; --success: #27ae60; --danger: #c0392b; --warning: #f39c12; }
         * { box-sizing: border-box; outline: none; }
         body { font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif; background: linear-gradient(135deg, #eef2f3 0%, #8e9eab 100%); padding: 20px; margin: 0; color: #333; min-height: 100vh; }
+        .main-container { max-width: 1200px; margin: 0 auto; padding-bottom: 50px; display: none; }
         
-        .main-container { max-width: 1200px; margin: 0 auto; padding-bottom: 50px; display: none; /* Escondido por padrão */ }
-        
-        /* TELA DE LOGIN */
-        #loginScreen {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 90vh; text-align: center;
-        }
-        .login-card {
-            background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            max-width: 400px; width: 100%;
-        }
-        .btn-google {
-            background-color: #db4437; color: white; padding: 15px 25px; border-radius: 50px;
-            border: none; font-size: 1rem; font-weight: bold; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            width: 100%; transition: transform 0.2s; box-shadow: 0 4px 10px rgba(219, 68, 55, 0.3);
-        }
+        /* LOGIN */
+        #loginScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 90vh; text-align: center; }
+        .login-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-width: 400px; width: 100%; }
+        .btn-google { background-color: #db4437; color: white; padding: 15px 25px; border-radius: 50px; border: none; font-size: 1rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; transition: transform 0.2s; box-shadow: 0 4px 10px rgba(219, 68, 55, 0.3); }
         .btn-google:hover { transform: scale(1.03); background-color: #c53929; }
 
-        /* HEADER E PERFIL */
+        /* HEADER */
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
         h1 { color: var(--secondary); margin: 0; text-transform: uppercase; letter-spacing: 1px; font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
-        
+        .header-buttons { display: flex; gap: 10px; align-items: center; }
         .user-profile { display: flex; align-items: center; gap: 10px; background: white; padding: 5px 15px 5px 5px; border-radius: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .user-avatar { width: 35px; height: 35px; border-radius: 50%; }
         .user-name { font-size: 0.9rem; font-weight: bold; color: var(--primary); }
         .btn-logout { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.2rem; margin-left: 10px; }
 
-        /* ESTILOS DO SISTEMA (MANTIDOS) */
+        /* CARDS E BOTOES */
         .btn-dashboard { background-color: var(--secondary); color: white; padding: 10px 20px; border-radius: 30px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         .btn-dashboard:hover { transform: scale(1.05); background-color: var(--primary); }
+        
+        .btn-admin { background-color: var(--warning); color: white; padding: 10px 20px; border-radius: 30px; border: none; font-weight: bold; cursor: pointer; display: none; align-items: center; gap: 8px; transition: 0.3s; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4); }
+        .btn-admin:hover { transform: scale(1.05); background-color: #e67e22; }
+
         .cards-wrapper { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 30px; }
         .card { flex: 1; min-width: 300px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); transition: transform 0.3s ease; border-top: 5px solid var(--primary); }
         h2 { color: var(--primary); margin-top: 0; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 10px; }
@@ -69,17 +61,28 @@
         th, td { padding: 12px 15px; border-bottom: 1px solid #eee; text-align: center; font-size: 0.9rem; }
         .btn-remove { background-color: #ffdde1; color: var(--danger); border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
         
+        /* MODAL GERAL */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .modal-content { background: white; width: 95%; max-width: 900px; max-height: 90vh; border-radius: 15px; padding: 30px; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.2); position: relative; }
         .close-modal { position: absolute; top: 20px; right: 20px; font-size: 1.5rem; color: #999; cursor: pointer; }
-        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
-        .status-none { background: #eee; color: #777; }
-        .status-coord { background: #fff3cd; color: #856404; }
-        .status-spec { background: #d1ecf1; color: #0c5460; }
-        .status-almox { background: #f8d7da; color: #721c24; }
-        .status-done { background: #d4edda; color: #155724; }
-        .btn-advance { background: var(--primary); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.75rem; }
         
+        /* DASHBOARD STATUS */
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
+        .status-0 { background: #eee; color: #777; }
+        .status-1 { background: #fff3cd; color: #856404; }
+        .status-2 { background: #d1ecf1; color: #0c5460; }
+        .status-3 { background: #d8d7f8; color: #2f439e; }
+        .status-4 { background: #d4edda; color: #155724; }
+        
+        .adm-controls { display: none; gap: 5px; justify-content: center; } /* Só aparece para ADM */
+        .btn-mini { padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; color: white; font-size: 0.7rem; }
+        .btn-back { background: var(--danger); }
+        .btn-next { background: var(--success); }
+
+        /* AREAS ADM */
+        .adm-section { background: #f9f9f9; padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px solid #eee; }
+        .adm-title { font-size: 0.9rem; font-weight: bold; color: var(--secondary); margin-bottom: 10px; display: block; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+
         #loadingOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 2000; justify-content: center; align-items: center; flex-direction: column; text-align: center; }
         .spinner { border: 8px solid #f3f3f3; border-top: 8px solid var(--primary); border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -90,7 +93,7 @@
 
 <div id="loadingOverlay">
     <div class="spinner"></div>
-    <h3 style="color: var(--primary); margin-top: 20px;">Carregando...</h3>
+    <h3 style="color: var(--primary); margin-top: 20px;">Processando...</h3>
     <div id="errorDisplay" class="error-log"></div>
     <button id="btnCloseError" style="display:none; margin-top:10px;" onclick="document.getElementById('loadingOverlay').style.display='none'">Fechar</button>
 </div>
@@ -98,7 +101,7 @@
 <div id="loginScreen">
     <div class="login-card">
         <h1 style="justify-content: center; margin-bottom: 20px;"><i class="fa-solid fa-helmet-safety"></i> Gestão EPI</h1>
-        <p style="color: #666; margin-bottom: 30px;">Faça login com sua conta institucional ou Google para acessar o sistema.</p>
+        <p style="color: #666; margin-bottom: 30px;">Acesso Restrito</p>
         <button class="btn-google" onclick="fazerLoginGoogle()">
             <i class="fa-brands fa-google"></i> Entrar com Google
         </button>
@@ -108,18 +111,18 @@
 <div class="main-container" id="appContent">
     <header>
         <h1><i class="fa-solid fa-helmet-safety"></i> Controle 2026</h1>
-        
-        <div style="display: flex; gap: 15px; align-items: center;">
+        <div class="header-buttons">
+            <button id="btnAdminPanel" class="btn-admin" onclick="abrirAdminPanel()">
+                <i class="fa-solid fa-users-gear"></i> Gestão Alunos
+            </button>
+
             <button class="btn-dashboard" onclick="abrirDashboard()">
                 <i class="fa-solid fa-list-check"></i> Status
             </button>
-            
             <div class="user-profile">
                 <img src="" id="userAvatar" class="user-avatar" alt="Avatar">
                 <span id="userName" class="user-name">Usuário</span>
-                <button class="btn-logout" onclick="fazerLogout()" title="Sair">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                </button>
+                <button class="btn-logout" onclick="fazerLogout()" title="Sair"><i class="fa-solid fa-right-from-bracket"></i></button>
             </div>
         </div>
     </header>
@@ -157,31 +160,74 @@
                 <tbody><tr><td colspan='5' style='color:#999; padding:20px;'>Nenhum item adicionado ainda.</td></tr></tbody>
             </table>
         </div>
-        <button id="btnSend" class="btn-send-email" onclick="enviarEmailReal()"><i class="fa-solid fa-paper-plane"></i> Enviar Tabela (Padrão Sistema)</button>
+        <button id="btnSend" class="btn-send-email" onclick="enviarEmailReal()"><i class="fa-solid fa-paper-plane"></i> Enviar Tabela e Excel</button>
         <div style="clear: both;"></div>
     </div>
 </div>
 
 <div class="modal-overlay" id="dashboardModal">
     <div class="modal-content">
-        <span class="close-modal" onclick="fecharDashboard()">&times;</span>
+        <span class="close-modal" onclick="fecharModais()">&times;</span>
         <h2 style="color: var(--secondary);">Status das Solicitações</h2>
         <div class="table-responsive">
             <table id="tabelaStatus">
-                <thead><tr><th>Turma</th><th>Status</th><th>Última Atualização</th><th>Ação</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Turma</th>
+                        <th>Status</th>
+                        <th>Última Atualização</th>
+                        <th id="headerAcoesAdm" style="display: none;">Ações ADM</th> 
+                    </tr>
+                </thead>
                 <tbody></tbody>
             </table>
         </div>
     </div>
 </div>
 
+<div class="modal-overlay" id="adminModal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="fecharModais()">&times;</span>
+        <h2 style="color: var(--warning);"><i class="fa-solid fa-pen-to-square"></i> Painel Administrativo</h2>
+        
+        <label>Selecione a Turma:</label>
+        <select id="admSelectTurma" onchange="admCarregarTurmaEAlunos()"><option value="">-- Selecione --</option></select>
+        
+        <div id="admClassArea" class="adm-section" style="display:none;">
+            <span class="adm-title">EDITAR NOME DA TURMA</span>
+            <label>Nome da Turma:</label>
+            <input type="text" id="admInputTurmaNome">
+            <button onclick="admRenomearTurma()" style="width:100%; margin-top:10px; background:var(--secondary); color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">Atualizar Nome da Turma</button>
+        </div>
+
+        <div class="adm-section">
+            <span class="adm-title">EDITAR ALUNOS</span>
+            <label>Selecione o Aluno:</label>
+            <select id="admSelectAluno" disabled onchange="admPreencherInputs()"><option value="">Selecione a Turma Acima</option></select>
+            
+            <div id="admEditArea" style="display:none; margin-top:10px;">
+                <label>Nome do Aluno:</label>
+                <input type="text" id="admInputNome">
+                <label>Registro (Matrícula):</label>
+                <input type="text" id="admInputReg">
+                <button onclick="admSalvarAluno()" style="width:100%; margin-top:15px; background:var(--success); color:white; border:none; padding:10px; border-radius:5px; font-weight:bold; cursor:pointer;">💾 Salvar Dados do Aluno</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     // =========================================================================
-    // 1. CONFIGURAÇÃO FIREBASE E EMAILJS (ATENÇÃO AQUI)
+    // 1. CONFIGURAÇÃO (PREENCHA AQUI)
     // =========================================================================
     
-    // --- COLE AS CHAVES DO FIREBASE AQUI ---
-    // (Pegue no Console Firebase > Configurações do Projeto > Geral > Seus aplicativos > Web)
+    // --- LISTA DE EMAILS ADMINISTRADORES ---
+    const EMAILS_ADM = [
+        "gustavo.s.rodrigues10@aluno.senai.br", 
+        "outro.adm@empresa.com.br"
+    ];
+
+    // --- FIREBASE KEYS ---
     const firebaseConfig = {
         apiKey: "AIzaSyA0v_e_jug-LitdrSSechKrCmXAKaBA00o",
         authDomain: "gestaoepi-bc265.firebaseapp.com",
@@ -191,69 +237,74 @@
         appId: "1:100298795455:web:85398ec8b014790ae9590a"
     };
 
-    // --- COLE AS CHAVES DO EMAILJS AQUI ---
+    // --- EMAILJS KEYS ---
     const EMAIL_SERVICE_ID = "service_2tp3jlm"; 
     const EMAIL_TEMPLATE_ID = "template_5kplq56"; 
     const EMAIL_PUBLIC_KEY = "zDXgHHECIycy13U3H"; 
 
     // Inicialização
     let auth;
+    let currentUserEmail = "";
+    let isAdmin = false;
+
     try {
         firebase.initializeApp(firebaseConfig);
         auth = firebase.auth();
         emailjs.init(EMAIL_PUBLIC_KEY);
-    } catch(e) { console.error("Erro na inicialização:", e); }
+    } catch(e) { console.error("Erro config:", e); }
 
     // =========================================================================
-    // 2. SISTEMA DE LOGIN (AUTH)
+    // 2. AUTHENTICATION & ADMIN CHECK
     // =========================================================================
-    
-    // Verifica se já está logado ao abrir a página
     auth.onAuthStateChanged(user => {
         if (user) {
-            // Usuário logado: Mostra o sistema
-            console.log("Logado como:", user.email);
+            currentUserEmail = user.email;
+            isAdmin = EMAILS_ADM.includes(currentUserEmail); 
+
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appContent').style.display = 'block';
-            
-            // Preenche dados do perfil
             document.getElementById('userName').innerText = user.displayName || user.email;
-            document.getElementById('userAvatar').src = user.photoURL || "https://ui-avatars.com/api/?name=" + user.email;
+            document.getElementById('userAvatar').src = user.photoURL || "https://ui-avatars.com/api/?name="+user.email;
+
+            if (isAdmin) document.getElementById('btnAdminPanel').style.display = 'flex';
         } else {
-            // Não logado: Mostra tela de login
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('appContent').style.display = 'none';
         }
     });
 
     function fazerLoginGoogle() {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider)
-            .catch(error => {
-                alert("Erro ao fazer login: " + error.message);
-            });
-    }
-
-    function fazerLogout() {
-        auth.signOut().then(() => {
-            alert("Você saiu do sistema.");
-            location.reload();
+        // 1. Configura a persistência para SESSION (Sessão)
+        // Isso garante que ao fechar a aba, o login seja esquecido.
+        auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
+        .then(() => {
+            // 2. Só depois de configurar, abre o popup do Google
+            const provider = new firebase.auth.GoogleAuthProvider();
+            return auth.signInWithPopup(provider);
+        })
+        .catch(error => {
+            alert("Erro: " + error.message);
         });
     }
 
+    function fazerLogout() { auth.signOut().then(() => location.reload()); }
+
     // =========================================================================
-    // 3. DADOS E LÓGICA DO SISTEMA (Tudo igual ao anterior)
+    // 3. DADOS
     // =========================================================================
     const CENTRO_CUSTO = "9464"; 
-    
-    const alunosT1A = [
-        { nome: "Ana Clara Carvalhal Gomes", codigo: "8001" }, { nome: "Ana Julia Xavier Martins", codigo: "8002" }, { nome: "Beatriz Dos Santos Nogueira", codigo: "8003" }, { nome: "Enzo Lima Rodovalho", codigo: "8004" }, { nome: "Guilherme Dos Santos Bueno", codigo: "8005" }, { nome: "Gustavo Da Silva Rodrigues", codigo: "8006" }, { nome: "Gustavo Gonçalves Silva", codigo: "8007" }, { nome: "Heitor Gonçalves Fernandes", codigo: "8008" }, { nome: "Hitalo Rodrigues Da Mata", codigo: "8009" }, { nome: "Julia Nagima Silva", codigo: "8010" }, { nome: "Luara Santos Neves Pinas", codigo: "8011" }, { nome: "Manuela De Sousa Frias", codigo: "8012" }, { nome: "Mauricio Lima Martins", codigo: "8013" }, { nome: "Pedro Dias De Oliveira", codigo: "8014" }, { nome: "Raphael Almeida Bomfim", codigo: "8015" }, { nome: "Vinicíus De Morais Dias", codigo: "8016" }
-    ];
+    let bancoAlunos = JSON.parse(localStorage.getItem('db_alunos_v2'));
 
-    const bancoAlunos = { "T1A": alunosT1A };
-    function gerarTurmaGenerica(nomeTurma, inicioCodigo) { let lista = []; for(let i=1; i<=16; i++) { lista.push({ nome: `Aluno ${i} da ${nomeTurma}`, codigo: `${inicioCodigo + i}` }); } return lista; }
+    if (!bancoAlunos) {
+        const alunosT1A = [
+            { nome: "Ana Clara Carvalhal Gomes", codigo: "8001" }, { nome: "Ana Julia Xavier Martins", codigo: "8002" }, { nome: "Beatriz Dos Santos Nogueira", codigo: "8003" }, { nome: "Enzo Lima Rodovalho", codigo: "8004" }, { nome: "Guilherme Dos Santos Bueno", codigo: "8005" }, { nome: "Gustavo Da Silva Rodrigues", codigo: "8006" }, { nome: "Gustavo Gonçalves Silva", codigo: "8007" }, { nome: "Heitor Gonçalves Fernandes", codigo: "8008" }, { nome: "Hitalo Rodrigues Da Mata", codigo: "8009" }, { nome: "Julia Nagima Silva", codigo: "8010" }, { nome: "Luara Santos Neves Pinas", codigo: "8011" }, { nome: "Manuela De Sousa Frias", codigo: "8012" }, { nome: "Mauricio Lima Martins", codigo: "8013" }, { nome: "Pedro Dias De Oliveira", codigo: "8014" }, { nome: "Raphael Almeida Bomfim", codigo: "8015" }, { nome: "Vinicíus De Morais Dias", codigo: "8016" }
+        ];
+        function gerarTurmaGenerica(nomeTurma, inicioCodigo) { let lista = []; for(let i=1; i<=16; i++) { lista.push({ nome: `Aluno ${i} da ${nomeTurma}`, codigo: `${inicioCodigo + i}` }); } return lista; }
 
-    bancoAlunos["T1B"] = gerarTurmaGenerica("T1B", 8100); bancoAlunos["T1C"] = gerarTurmaGenerica("T1C", 8200); bancoAlunos["M2A"] = gerarTurmaGenerica("M2A", 8300); bancoAlunos["M2B"] = gerarTurmaGenerica("M2B", 8400); bancoAlunos["M2C"] = gerarTurmaGenerica("M2C", 8500); bancoAlunos["T3A"] = gerarTurmaGenerica("T3A", 8600); bancoAlunos["T3B"] = gerarTurmaGenerica("T3B", 8700); bancoAlunos["T3C"] = gerarTurmaGenerica("T3C", 8800); bancoAlunos["M4A"] = gerarTurmaGenerica("M4A", 8900); bancoAlunos["M4B"] = gerarTurmaGenerica("M4B", 9000); bancoAlunos["M4C"] = gerarTurmaGenerica("M4C", 9100);
+        bancoAlunos = { "T1A": alunosT1A };
+        bancoAlunos["T1B"] = gerarTurmaGenerica("T1B", 8100); bancoAlunos["T1C"] = gerarTurmaGenerica("T1C", 8200); bancoAlunos["M2A"] = gerarTurmaGenerica("M2A", 8300); bancoAlunos["M2B"] = gerarTurmaGenerica("M2B", 8400); bancoAlunos["M2C"] = gerarTurmaGenerica("M2C", 8500); bancoAlunos["T3A"] = gerarTurmaGenerica("T3A", 8600); bancoAlunos["T3B"] = gerarTurmaGenerica("T3B", 8700); bancoAlunos["T3C"] = gerarTurmaGenerica("T3C", 8800); bancoAlunos["M4A"] = gerarTurmaGenerica("M4A", 8900); bancoAlunos["M4B"] = gerarTurmaGenerica("M4B", 9000); bancoAlunos["M4C"] = gerarTurmaGenerica("M4C", 9100);
+        localStorage.setItem('db_alunos_v2', JSON.stringify(bancoAlunos));
+    }
 
     const catalogo = {
         "Calça Masculina": { limite: 3, tamanhos: { "36": "B09991539", "38": "B09991540", "40": "B09991541", "42": "B09991542", "44": "B09991543", "46": "B09991544", "48": "B09991545", "50": "B09991546", "52": "B09991146", "54": "B09991547", "56": "B09991548", "60": "B09991549" } },
@@ -276,14 +327,16 @@
 
     let listaExportacao = [];
     let statusTurmas = JSON.parse(localStorage.getItem('statusSolicitacoes')) || {};
-    const ESTADOS = ["Não Iniciado", "Com Segurança", "Aguardando Almox.", "Pronto"];
+    const ESTADOS = ["Não Iniciado", "Aguardando Coord. Segurança","Aguardando Tec. Segurança", "Aguardando Almox.", "Pronto para retirada"];
 
     window.onload = function() {
         const selTipo = document.getElementById('tipoPeca');
         Object.keys(catalogo).sort().forEach(item => { let opt = document.createElement('option'); opt.value = item; opt.text = item; selTipo.appendChild(opt); });
-        atualizarTabelaStatus();
     };
 
+    // =========================================================================
+    // 4. LÓGICA DO SISTEMA PRINCIPAL
+    // =========================================================================
     function carregarTurmas() {
         const turno = document.getElementById('selectTurno').value;
         const selTurma = document.getElementById('selectTurma');
@@ -388,20 +441,17 @@
 
     function enviarEmailReal() {
         if (listaExportacao.length === 0) return alert("A lista está vazia! Adicione itens antes de enviar.");
-        if(EMAIL_SERVICE_ID.includes("COLE_AQUI") || firebaseConfig.apiKey.includes("SUA_API_KEY")) {
-            return alert("ERRO DE CONFIGURAÇÃO:\n\nVocê precisa colocar suas chaves do Firebase e do EmailJS no código.");
-        }
-
+        
         const overlay = document.getElementById('loadingOverlay');
         const errorDisplay = document.getElementById('errorDisplay');
         const btnClose = document.getElementById('btnCloseError');
         overlay.style.display = 'flex'; errorDisplay.style.display = 'none'; btnClose.style.display = 'none';
-        document.querySelector('#loadingOverlay h3').innerText = "Gerando Tabela de Importação...";
-
+        
         let tabelaHTML = `
         <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 14px; color: #333; text-align: center;">
             <thead>
                 <tr style="background-color: #004e92; color: #ffffff;">
+                    <th style="border: 1px solid #dddddd; padding: 8px;">Turma</th>
                     <th style="border: 1px solid #dddddd; padding: 8px;">Reg. Solicitante</th>
                     <th style="border: 1px solid #dddddd; padding: 8px;">C.C. Solicitante</th>
                     <th style="border: 1px solid #dddddd; padding: 8px;">Numero do Item</th>
@@ -414,6 +464,7 @@
         listaExportacao.forEach(item => {
             tabelaHTML += `
                 <tr style="border-bottom: 1px solid #dddddd;">
+                    <td style="border: 1px solid #dddddd; padding: 8px; font-weight: bold;">${item.turma}</td>
                     <td style="border: 1px solid #dddddd; padding: 8px;">${item.regAluno}</td>
                     <td style="border: 1px solid #dddddd; padding: 8px;">${CENTRO_CUSTO}</td>
                     <td style="border: 1px solid #dddddd; padding: 8px;">${item.codigoItem}</td>
@@ -428,11 +479,10 @@
 
         emailjs.send(EMAIL_SERVICE_ID, EMAIL_TEMPLATE_ID, params)
             .then(function(response) {
-                alert("✅ E-mail enviado com sucesso!\n\nFoi enviada a tabela de 5 colunas padrão para importação.\nO Excel backup será baixado.");
+                alert("✅ E-mail enviado com sucesso!");
                 const turmasAfetadas = [...new Set(listaExportacao.map(item => item.turma))];
                 turmasAfetadas.forEach(turma => { statusTurmas[turma] = { status: 1, data: new Date().toLocaleString() }; });
                 localStorage.setItem('statusSolicitacoes', JSON.stringify(statusTurmas));
-                atualizarTabelaStatus();
                 gerarExcel();
                 listaExportacao = [];
                 atualizarTabelaSite();
@@ -455,23 +505,211 @@
         XLSX.writeFile(wb, "Requisicao_EPIs_Exportacao.xlsx");
     }
 
-    function abrirDashboard() { document.getElementById('dashboardModal').style.display = 'flex'; atualizarTabelaStatus(); }
-    function fecharDashboard() { document.getElementById('dashboardModal').style.display = 'none'; }
+    // =========================================================================
+    // 5. FUNÇÕES ADMINISTRATIVAS (STATUS + EDIÇÃO)
+    // =========================================================================
     
-    function atualizarTabelaStatus() {
+   // --- GESTÃO DE STATUS (ATUALIZADO) ---
+
+    function abrirDashboard() {
+        const modal = document.getElementById('dashboardModal');
         const tbody = document.querySelector("#tabelaStatus tbody");
+        const headerAdm = document.getElementById('headerAcoesAdm');
+        
+        // 1. Controle do Cabeçalho da Tabela
+        if (headerAdm) {
+            headerAdm.style.display = isAdmin ? "table-cell" : "none";
+        }
+
         tbody.innerHTML = "";
-        Object.keys(bancoAlunos).sort().forEach(turma => {
-            const info = statusTurmas[turma] || { status: 0, data: "-" };
-            let badgeClass = "status-none";
-            if(info.status === 1) badgeClass = "status-coord"; else if(info.status === 2) badgeClass = "status-spec"; else if(info.status === 3) badgeClass = "status-almox"; else if(info.status === 4) badgeClass = "status-done";
-            let tr = document.createElement('tr');
-            tr.innerHTML = `<td><strong>${turma}</strong></td><td><span class="status-badge ${badgeClass}">${ESTADOS[info.status]}</span></td><td><small>${info.data}</small></td><td>${info.status > 0 ? '✔️' : '-'}</td>`;
-            tbody.appendChild(tr);
+        
+        // 2. Pega TODAS as turmas
+        const todasAsTurmas = Object.keys(bancoAlunos).sort();
+        
+        if (todasAsTurmas.length === 0) {
+            const colSpan = isAdmin ? 4 : 3;
+            tbody.innerHTML = `<tr><td colspan='${colSpan}'>Nenhuma turma cadastrada.</td></tr>`;
+        } else {
+            todasAsTurmas.forEach(turma => {
+                let dados = statusTurmas[turma];
+                // Se não tiver dados, cria visualmente como "Não Iniciado"
+                if (!dados) {
+                    dados = { status: 0, data: "-" };
+                }
+
+                const classeStatus = `status-${dados.status}`;
+                const textoStatus = ESTADOS[dados.status];
+                
+                // 3. Coluna de Ações (Sem o texto "Mudar")
+                let colunaAcoesHtml = "";
+                if (isAdmin) {
+                    colunaAcoesHtml = `
+                        <td>
+                            <div class="adm-controls" style="display:flex; justify-content: center; gap: 10px;">
+                                <button class="btn-mini btn-back" onclick="alterarStatus('${turma}', -1)" title="Voltar"><i class="fa-solid fa-arrow-left"></i></button>
+                                <button class="btn-mini btn-next" onclick="alterarStatus('${turma}', 1)" title="Avançar"><i class="fa-solid fa-arrow-right"></i></button>
+                            </div>
+                        </td>
+                    `;
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${turma}</strong></td>
+                    <td><span class="status-badge ${classeStatus}">${textoStatus}</span></td>
+                    <td><small>${dados.data}</small></td>
+                    ${colunaAcoesHtml} 
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        modal.style.display = 'flex';
+    }
+
+    function alterarStatus(turma, direcao) {
+        // Se não existir registro, cria agora como 0
+        if (!statusTurmas[turma]) {
+            statusTurmas[turma] = { status: 0, data: "-" };
+        }
+
+        let statusAtual = statusTurmas[turma].status;
+        let novoStatus = statusAtual + direcao;
+        let maxStatus = ESTADOS.length - 1;
+        let novaData = new Date().toLocaleString();
+
+        // --- LÓGICA DE REINÍCIO (LOOP) ---
+        
+        // Se passou do máximo, volta para o zero e reseta a data
+        if (novoStatus > maxStatus) {
+            novoStatus = 0;
+            novaData = "-"; 
+        } 
+        // Se tentou voltar antes do zero, mantém no zero
+        else if (novoStatus < 0) {
+            novoStatus = 0;
+            // Se já estava no 0, mantém a data atual (ou "-")
+            novaData = statusTurmas[turma].data; 
+        }
+
+        // Se o novo status for 0 (por reset ou loop), garantimos que a data seja "-"
+        if (novoStatus === 0) {
+            novaData = "-";
+        }
+
+        // Atualiza e Salva
+        statusTurmas[turma].status = novoStatus;
+        statusTurmas[turma].data = novaData;
+        
+        localStorage.setItem('statusSolicitacoes', JSON.stringify(statusTurmas));
+        abrirDashboard(); 
+    }
+
+    // --- GESTÃO DE DADOS (TURMAS E ALUNOS) ---
+    function abrirAdminPanel() {
+        if(!isAdmin) return;
+        document.getElementById('adminModal').style.display = 'flex';
+        const sel = document.getElementById('admSelectTurma');
+        sel.innerHTML = '<option value="">-- Selecione --</option>';
+        Object.keys(bancoAlunos).sort().forEach(t => {
+            let opt = document.createElement('option');
+            opt.value = t; opt.text = t;
+            sel.appendChild(opt);
         });
     }
-    
-    window.onclick = function(e) { if (e.target == document.getElementById('dashboardModal')) fecharDashboard(); }
+
+    function admCarregarTurmaEAlunos() {
+        const turma = document.getElementById('admSelectTurma').value;
+        const selAl = document.getElementById('admSelectAluno');
+        
+        document.getElementById('admEditArea').style.display = 'none';
+        document.getElementById('admClassArea').style.display = 'none';
+        selAl.innerHTML = '<option value="">-- Selecione --</option>';
+        selAl.disabled = true;
+
+        if(turma) {
+            // Preenche nome da turma para edição
+            document.getElementById('admInputTurmaNome').value = turma;
+            document.getElementById('admClassArea').style.display = 'block';
+
+            // Preenche alunos
+            selAl.disabled = false;
+            bancoAlunos[turma].forEach((aluno, index) => {
+                let opt = document.createElement('option');
+                opt.value = index; opt.text = aluno.nome;
+                selAl.appendChild(opt);
+            });
+        }
+    }
+
+    function admPreencherInputs() {
+        const turma = document.getElementById('admSelectTurma').value;
+        const idx = document.getElementById('admSelectAluno').value;
+        if(turma && idx !== "") {
+            const aluno = bancoAlunos[turma][idx];
+            document.getElementById('admInputNome').value = aluno.nome;
+            document.getElementById('admInputReg').value = aluno.codigo;
+            document.getElementById('admEditArea').style.display = 'block';
+        }
+    }
+
+    function admSalvarAluno() {
+        const turma = document.getElementById('admSelectTurma').value;
+        const idx = document.getElementById('admSelectAluno').value;
+        const novoNome = document.getElementById('admInputNome').value;
+        const novoReg = document.getElementById('admInputReg').value;
+
+        if(novoNome && novoReg) {
+            bancoAlunos[turma][idx].nome = novoNome;
+            bancoAlunos[turma][idx].codigo = novoReg;
+            localStorage.setItem('db_alunos_v2', JSON.stringify(bancoAlunos));
+            alert("✅ Aluno atualizado!");
+            admCarregarTurmaEAlunos(); // Recarrega lista
+        }
+    }
+
+    function admRenomearTurma() {
+        const turmaAntiga = document.getElementById('admSelectTurma').value;
+        const novoNome = document.getElementById('admInputTurmaNome').value.trim();
+
+        if (!novoNome) return alert("Digite um nome válido.");
+        if (novoNome === turmaAntiga) return; // Nada mudou
+        if (bancoAlunos[novoNome]) return alert("Já existe uma turma com esse nome!");
+
+        if (confirm(`Tem certeza que deseja renomear "${turmaAntiga}" para "${novoNome}"?`)) {
+            // 1. Copia dados para nova chave
+            bancoAlunos[novoNome] = bancoAlunos[turmaAntiga];
+            delete bancoAlunos[turmaAntiga]; // Apaga antiga
+
+            // 2. Atualiza Status (se houver)
+            if (statusTurmas[turmaAntiga]) {
+                statusTurmas[novoNome] = statusTurmas[turmaAntiga];
+                delete statusTurmas[turmaAntiga];
+                localStorage.setItem('statusSolicitacoes', JSON.stringify(statusTurmas));
+            }
+
+            // 3. Salva Alunos
+            localStorage.setItem('db_alunos_v2', JSON.stringify(bancoAlunos));
+
+            alert("✅ Turma renomeada com sucesso!");
+            
+            // 4. Recarrega interface
+            abrirAdminPanel(); // Recarrega dropdown de turmas
+            // Reseta seleção principal para evitar erros
+            document.getElementById('selectTurno').value = "";
+            carregarTurmas();
+        }
+    }
+
+    function fecharModais() {
+        document.getElementById('dashboardModal').style.display = 'none';
+        document.getElementById('adminModal').style.display = 'none';
+    }
+
+    window.onclick = function(e) {
+        if (e.target == document.getElementById('dashboardModal')) fecharModais();
+        if (e.target == document.getElementById('adminModal')) fecharModais();
+    }
 </script>
 
 </body>

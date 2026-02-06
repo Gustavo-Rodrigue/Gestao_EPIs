@@ -200,7 +200,7 @@
     <div class="main-container" id="appContent">
         <header>
             <div class="brand">
-                <h1><i class="fa-solid fa-shield-halved"></i> Controle 2026</h1>
+                <h1><i class="fa-solid fa-shield-halved"></i> Solicitação de EPIs</h1>
             </div>
             <div class="header-actions">
                 <button id="btnAdminPanel" class="btn btn-warning" onclick="abrirAdminPanel()" style="display:none;">
@@ -456,34 +456,68 @@
 
         const DOMINIO_PERMITIDO = "@aluno.senai.br";
 
+        // =============================================================
+        //  CÓDIGO COMPLETO: BLOQUEIO DE LOGIN + BOTÃO ADMIN (EPIs)
+        // =============================================================
         auth.onAuthStateChanged(user => {
             if (user) {
-                // Validação de domínio igual ao outro projeto
-                const email = user.email || "";
-                const ehAdmin = EMAILS_ADM.includes(email);
-                const ehAluno = email.endsWith(DOMINIO_PERMITIDO);
+                // 1. TRATAMENTO DE EMAIL (Converte para minúsculo para evitar erro)
+                const email = (user.email || "").toLowerCase().trim();
+                
+                // 2. VERIFICAÇÃO DE ADMIN (Comparando minúsculo com minúsculo)
+                // Isso garante que se o google mandar "Admin@..." e na lista tiver "admin@...", funcione.
+                const listaAdmsTratada = EMAILS_ADM.map(e => e.toLowerCase().trim());
+                const ehAdmin = listaAdmsTratada.includes(email);
 
-                if (!ehAdmin && !ehAluno) {
-                    alert("Acesso Negado: Use e-mail institucional.");
-                    auth.signOut();
+                // 3. SUA LÓGICA DE BLOQUEIO (Mantida como você gosta)
+                // Se não é admin E não termina com o domínio permitido -> Tchau
+                if (!ehAdmin && !email.endsWith(DOMINIO_PERMITIDO)) {
+                    alert("Acesso Negado: Use um e-mail institucional."); 
+                    auth.signOut(); 
                     return;
                 }
 
+                // 4. DEFINIÇÃO DE VARIÁVEIS GLOBAIS
                 userEmail = email;
-                isAdmin = ehAdmin;
+                currentUserName = user.displayName || "Usuário";
+                isAdmin = ehAdmin; // Atualiza a variável global isAdmin
 
+                // 5. ATUALIZAÇÃO DA TELA
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('appContent').style.display = 'block';
-                document.getElementById('userName').innerText = user.displayName || "Usuário";
-                document.getElementById('userAvatar').src = user.photoURL || `https://ui-avatars.com/api/?name=${email}`;
-                document.getElementById('userRole').innerText = isAdmin ? "Administrador" : "Aluno Solicitante";
                 
-                renderizarGaleria(); // Carrega os cards
+                document.getElementById('userName').innerText = currentUserName;
+                document.getElementById('userAvatar').src = user.photoURL || `https://ui-avatars.com/api/?name=${email}`;
+                
+                // (Opcional) Mostra cargo no texto
+                const roleEl = document.getElementById('userRole');
+                if(roleEl) roleEl.innerText = isAdmin ? "Administrador" : "Aluno";
+
+                // 6. MOSTRAR BOTÃO DE ADMIN (O que estava faltando)
+                // Como corrigimos a variável 'ehAdmin' lá em cima, agora 'isAdmin' deve ser true
+                if (isAdmin) {
+                    const btn = document.getElementById('btnAdminPanel');
+                    if (btn) {
+                        btn.style.display = 'inline-flex'; // Força aparecer
+                        btn.classList.remove('hidden');    // Garante que não tem classe escondendo
+                        console.log("Botão de Admin ativado!");
+                    } else {
+                        console.error("ERRO: Botão btnAdminPanel não encontrado no HTML");
+                    }
+                }
+
             } else {
+                // USUÁRIO DESLOGADO
                 document.getElementById('loginScreen').style.display = 'flex';
                 document.getElementById('appContent').style.display = 'none';
+                
+                // Esconde botão se deslogar
+                const btn = document.getElementById('btnAdminPanel');
+                if (btn) btn.style.display = 'none';
             }
         });
+
+        
         function fazerLoginGoogle() {
             auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
             .then(() => {

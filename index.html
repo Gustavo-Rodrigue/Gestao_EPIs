@@ -759,65 +759,52 @@
 
         // ======================== ENVIO E EXCEL ========================
         function enviarEmailReal() {
-            // 1. Validações básicas (mantivemos igual)
-            const turma = document.getElementById('selectTurma').value;
-            if (turma === "") return alert("Selecione sua turma/setor!");
-            
-            const chaves = Object.keys(carrinho);
-            if (chaves.length === 0) return alert("Seu carrinho está vazio!");
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.style.display = 'flex';
 
-            // 2. Monta a Tabela HTML (mantivemos igual)
-            let tabelaHtml = `<table border="1" cellpadding="5" style="border-collapse: collapse; width: 100%;">
-                <tr style="background-color: #f2f2f2;"><th>Item</th><th>Tamanho</th><th>Qtd</th><th>Código</th></tr>`;
-            
-            chaves.forEach(chave => {
-                let item = carrinho[chave];
-                tabelaHtml += `<tr>
-                    <td>${item.nome}</td>
-                    <td style="text-align:center">${item.tam}</td>
-                    <td style="text-align:center">${item.qtd}</td>
-                    <td style="text-align:center">${item.cod}</td>
+            let tabelaHTML = `
+            <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 12px; border: 1px solid #ccc;">
+                <tr style="background-color: #4361ee; color: white;">
+                    <th style="padding:8px; border:1px solid #ccc;">Turma</th>
+                    <th style="padding:8px; border:1px solid #ccc;">Reg</th>
+                    <th style="padding:8px; border:1px solid #ccc;">C.C.</th>
+                    <th style="padding:8px; border:1px solid #ccc;">Item</th>
+                    <th style="padding:8px; border:1px solid #ccc;">Qtd</th>
                 </tr>`;
+
+            listaExportacao.forEach(item => {
+                tabelaHTML += `
+                    <tr>
+                        <td style="padding:8px; border:1px solid #ccc;">${item.turma}</td>
+                        <td style="padding:8px; border:1px solid #ccc;">${item.regAluno}</td>
+                        <td style="padding:8px; border:1px solid #ccc;">${CENTRO_CUSTO}</td>
+                        <td style="padding:8px; border:1px solid #ccc;">${item.codigoItem}</td>
+                        <td style="padding:8px; border:1px solid #ccc;">${item.quantidade}</td>
+                    </tr>`;
             });
-            tabelaHtml += "</table>";
+            tabelaHTML += `</table>`;
 
-            // ---------------------------------------------------------
-            // AQUI ESTÁ A MUDANÇA PRINCIPAL!
-            // ---------------------------------------------------------
-            const templateParams = {
-                aluno_nome: currentUserName,     // Nome vindo do Google
-                aluno_email: currentUserEmail,   // Email vindo do Google (para o Reply-To)
-                aluno_turma: turma,
-                pedido_tabela: tabelaHtml,
-                data_pedido: new Date().toLocaleString()
-            };
+            const turmasUnicas = [...new Set(listaExportacao.map(i => i.turma))].join(", ");
+            const params = { turma: turmasUnicas, mensagem: tabelaHTML, data: new Date().toLocaleString() };
 
-            // 3. Envia para o EmailJS
-            // (Certifique-se de que os IDs 'service_...' e 'template_...' estão certos)
-            emailjs.send("service_fvbd0il", "template_q4d7z5r", templateParams)
-                .then(function(response) {
-                    console.log('SUCESSO!', response.status, response.text);
-                    alert("✅ Solicitação enviada com sucesso!");
-
-                    // Atualiza o status para o painel do Admin
-                    statusTurmas[turma] = { 
-                        status: 1, 
-                        data: new Date().toLocaleString(),
-                        usuario: currentUserName // Salva quem pediu
-                    };
+            emailjs.send(EMAIL_SERVICE_ID, EMAIL_TEMPLATE_ID, params)
+                .then(() => {
+                    const turmasAfetadas = [...new Set(listaExportacao.map(item => item.turma))];
+                    turmasAfetadas.forEach(turma => { 
+                        statusTurmas[turma] = { status: 1, data: new Date().toLocaleString() }; 
+                    });
                     localStorage.setItem('statusSolicitacoes', JSON.stringify(statusTurmas));
-
-                    // Limpa tudo
-                    carrinho = {};
-                    atualizarCarrinho();
-                    fecharModais();
                     
-                    // Atualiza o dashboard se estiver aberto
-                    abrirDashboard();
-
-                }, function(error) {
-                    console.error('ERRO:', error);
-                    alert("❌ Falha ao enviar e-mail. Tente novamente.");
+                    gerarExcel();
+                    listaExportacao = [];
+                    atualizarTabelaSite();
+                    
+                    overlay.style.display = 'none';
+                    alert("✅ Sucesso! E-mail enviado e Excel gerado.");
+                })
+                .catch(error => {
+                    overlay.style.display = 'none';
+                    alert("❌ Erro ao enviar: " + JSON.stringify(error));
                 });
         }
 

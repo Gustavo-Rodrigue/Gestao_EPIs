@@ -443,7 +443,7 @@
 
         let listaExportacao = [];
         let statusTurmas = JSON.parse(localStorage.getItem('statusSolicitacoes')) || {};
-        const ESTADOS = ["Não Iniciado", "Coord. Segurança", "Téc. Segurança", "Almoxarifado", "Pronto/Entregue"];
+        const ESTADOS = ["Não Iniciado", "Coord. Segurança", "Téc. Segurança", "Almoxarifado", "Pronto para Retirada"];
 
         // ======================== AUTH & INICIALIZAÇÃO ========================
         window.onload = function() {
@@ -755,20 +755,22 @@
             headerAdm.style.display = isAdmin ? "table-cell" : "none";
             tbody.innerHTML = "";
             
-            const todasAsTurmas = Object.keys(bancoAlunos).sort();
+            // MUDANÇA: Em vez de pegar todas as turmas do banco, 
+            // pegamos apenas as que estão no objeto statusTurmas e tem status > 0
+            const turmasAtivas = Object.keys(statusTurmas).filter(t => statusTurmas[t].status > 0).sort();
 
-            if (todasAsTurmas.length === 0) {
-                tbody.innerHTML = `<tr><td colspan='${isAdmin ? 4 : 3}' style="text-align:center; padding:20px;">Nenhuma turma cadastrada.</td></tr>`;
+            if (turmasAtivas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan='${isAdmin ? 4 : 3}' style="text-align:center; padding:20px; color: #888;">Nenhuma solicitação em andamento.</td></tr>`;
             } else {
-                todasAsTurmas.forEach(turma => {
-                    let dados = statusTurmas[turma] || { status: 0, data: "-" };
+                turmasAtivas.forEach(turma => {
+                    let dados = statusTurmas[turma];
                     
                     let actionsHtml = "";
                     if (isAdmin) {
                         actionsHtml = `
                             <td style="text-align:center;">
-                                <button class="btn btn-danger" style="padding:4px 8px; font-size:0.7rem;" onclick="alterarStatus('${turma}', -1)"><i class="fa-solid fa-arrow-left"></i></button>
-                                <button class="btn btn-success" style="padding:4px 8px; font-size:0.7rem;" onclick="alterarStatus('${turma}', 1)"><i class="fa-solid fa-arrow-right"></i></button>
+                                <button class="btn btn-danger" style="padding:4px 8px; font-size:0.7rem;" onclick="alterarStatus('${turma}', -1)" title="Voltar Status"><i class="fa-solid fa-arrow-left"></i></button>
+                                <button class="btn btn-success" style="padding:4px 8px; font-size:0.7rem;" onclick="alterarStatus('${turma}', 1)" title="Avançar Status"><i class="fa-solid fa-arrow-right"></i></button>
                             </td>`;
                     }
 
@@ -786,16 +788,32 @@
         }
 
         function alterarStatus(turma, direcao) {
-            if (!statusTurmas[turma]) statusTurmas[turma] = { status: 0, data: "-" };
+            // Prevenção de erro
+            if (!statusTurmas[turma]) return; 
             
             let novoStatus = statusTurmas[turma].status + direcao;
             
-            // Loop de Status
-            if (novoStatus >= ESTADOS.length) { novoStatus = 0; statusTurmas[turma].data = "-"; }
-            else if (novoStatus < 0) { novoStatus = 0; }
-            else { statusTurmas[turma].data = new Date().toLocaleString(); }
+            // LÓGICA NOVA: Se voltar para 0 (Não Iniciado) ou menos, REMOVE da lista
+            if (novoStatus <= 0) {
+                delete statusTurmas[turma]; // Apaga do objeto
+                localStorage.setItem('statusSolicitacoes', JSON.stringify(statusTurmas));
+                abrirDashboard(); // Recarrega a tela (a linha vai sumir)
+                return;
+            }
 
+            // Se passar do último status (4), vamos assumir que zera e some também?
+            // Ou trava no último? Vou configurar para zerar e sumir (ciclo completo).
+            if (novoStatus >= ESTADOS.length) {
+                 delete statusTurmas[turma];
+                 localStorage.setItem('statusSolicitacoes', JSON.stringify(statusTurmas));
+                 abrirDashboard();
+                 return;
+            }
+
+            // Se for um status normal (1, 2, 3, 4), atualiza
             statusTurmas[turma].status = novoStatus;
+            statusTurmas[turma].data = new Date().toLocaleString(); // Atualiza hora
+
             localStorage.setItem('statusSolicitacoes', JSON.stringify(statusTurmas));
             abrirDashboard();
         }

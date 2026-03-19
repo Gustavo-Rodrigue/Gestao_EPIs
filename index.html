@@ -327,6 +327,22 @@
             <h2 style="color: var(--text-main); margin-bottom: 5px;"><i class="fa-solid fa-toolbox"></i> Painel Admin</h2>
             <p style="color: var(--text-light); font-size: 0.9rem; margin-bottom: 20px;">Gerencie turmas e alunos.</p>
             
+            <div class="adm-section" style="margin-top: 0; margin-bottom: 25px; border-left: 4px solid var(--warning);">
+                <span class="adm-header" style="color: var(--warning);"><i class="fa-solid fa-forward-step"></i> Ação Global</span>
+                
+                <button onclick="admAvancarSemestreGlobal()" class="btn btn-warning" style="width:100%; justify-content: center;">
+                    <i class="fa-solid fa-graduation-cap"></i> Avançar Semestre (Todas as Turmas)
+                </button>
+                
+                <button onclick="admDesfazerAvancoSemestre()" class="btn btn-dark" style="width:100%; justify-content: center; margin-top: 10px;">
+                    <i class="fa-solid fa-rotate-left"></i> Desfazer Último Avanço
+                </button>
+                
+                <p style="font-size: 0.75rem; color: #666; margin-top: 10px; text-align: center;">
+                    Ex: T1A se torna T2A. Turmas de 4º semestre voltam para o 1º e são esvaziadas.
+                </p>
+            </div>
+            
             <label style="color: var(--primary);">1. Selecione a Turma Alvo:</label>
             <select id="admSelectTurma" onchange="admCarregarTurmaEAlunos()" style="border-color: var(--primary);">
                 <option value="">-- Selecione uma Turma --</option>
@@ -422,10 +438,29 @@
 
         // Se vazio, cria estrutura inicial (Backup)
         if (!bancoAlunos) {
-            const gerar = (n, cod) => Array.from({length:10}, (_,i)=>({nome:`Aluno ${i+1} da ${n}`, codigo:`${cod+i}`}));
             bancoAlunos = { 
-                "T1A": gerar("T1A", 8000), "T1B": gerar("T1B", 8100), 
-                "M2A": gerar("M2A", 8200), "T3A": gerar("T3A", 8300) 
+                "T1A": [
+                    { nome: "Anna Julia", codigo: "9001" },
+                    { nome: "Ana Clara", codigo: "9002" },
+                    { nome: "Beatriz", codigo: "9003" }, 
+                    { nome: "Enzo", codigo: "9004" },
+                    { nome: "Guilherme", codigo: "9005" },
+                    { nome: "Gustavo da Silva", codigo: "9006" }, 
+                    { nome: "Gustavo Gonçalves", codigo: "9007" },
+                    { nome: "Heitor", codigo: "9008" },
+                    { nome: "Hítalo", codigo: "9009" }, 
+                    { nome: "Julia", codigo: "9010" },
+                    { nome: "Luara", codigo: "9011" },
+                    { nome: "Manuela", codigo: "9012" }, 
+                    { nome: "Mauricio", codigo: "9013" },
+                    { nome: "Pedro", codigo: "9014" },
+                    { nome: "Raphael", codigo: "9015" },
+                    { nome: "Vinicius", codigo: "9016" }
+                ],
+                "M2B": [
+                    { nome: "Ana Catarina", codigo: "8001" },
+                    { nome: "Rui Costa", codigo: "8002" }
+                ]
             };
             localStorage.setItem('db_alunos_v2', JSON.stringify(bancoAlunos));
         }
@@ -540,12 +575,10 @@
                 const email = (user.email || "").toLowerCase().trim();
                 
                 // 2. VERIFICAÇÃO DE ADMIN (Comparando minúsculo com minúsculo)
-                // Isso garante que se o google mandar "Admin@..." e na lista tiver "admin@...", funcione.
                 const listaAdmsTratada = EMAILS_ADM.map(e => e.toLowerCase().trim());
                 const ehAdmin = listaAdmsTratada.includes(email);
 
-                // 3. SUA LÓGICA DE BLOQUEIO (Mantida como você gosta)
-                // Se não é admin E não termina com o domínio permitido -> Tchau
+                // 3. SUA LÓGICA DE BLOQUEIO
                 if (!ehAdmin && !email.endsWith(DOMINIO_PERMITIDO)) {
                     alert("Acesso Negado: Use um e-mail institucional."); 
                     auth.signOut(); 
@@ -555,7 +588,7 @@
                 // 4. DEFINIÇÃO DE VARIÁVEIS GLOBAIS
                 userEmail = email;
                 currentUserName = user.displayName || "Usuário";
-                isAdmin = ehAdmin; // Atualiza a variável global isAdmin
+                isAdmin = ehAdmin; 
 
                 // 5. ATUALIZAÇÃO DA TELA
                 document.getElementById('loginScreen').style.display = 'none';
@@ -563,21 +596,13 @@
                 
                 document.getElementById('userName').innerText = currentUserName;
                 document.getElementById('userAvatar').src = user.photoURL || `https://ui-avatars.com/api/?name=${email}`;
-                
-                // (Opcional) Mostra cargo no texto
-                const roleEl = document.getElementById('userRole');
-                if(roleEl) roleEl.innerText = isAdmin ? "Administrador" : "Aluno";
 
-                // 6. MOSTRAR BOTÃO DE ADMIN (O que estava faltando)
-                // Como corrigimos a variável 'ehAdmin' lá em cima, agora 'isAdmin' deve ser true
+                // 6. MOSTRAR BOTÃO DE ADMIN
                 if (isAdmin) {
                     const btn = document.getElementById('btnAdminPanel');
                     if (btn) {
-                        btn.style.display = 'inline-flex'; // Força aparecer
-                        btn.classList.remove('hidden');    // Garante que não tem classe escondendo
-                        console.log("Botão de Admin ativado!");
-                    } else {
-                        console.error("ERRO: Botão btnAdminPanel não encontrado no HTML");
+                        btn.style.display = 'inline-flex';
+                        btn.classList.remove('hidden');
                     }
                 }
 
@@ -586,13 +611,11 @@
                 document.getElementById('loginScreen').style.display = 'flex';
                 document.getElementById('appContent').style.display = 'none';
                 
-                // Esconde botão se deslogar
                 const btn = document.getElementById('btnAdminPanel');
                 if (btn) btn.style.display = 'none';
             }
         });
 
-        
         function fazerLoginGoogle() {
             auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
             .then(() => {
@@ -713,7 +736,6 @@
             });
 
             atualizarTabelaSite();
-            // Feedback Visual
             const btn = document.getElementById('btnAdd');
             const originalText = btn.innerHTML;
             btn.innerHTML = `<i class="fa-solid fa-check"></i> Adicionado!`;
@@ -830,8 +852,6 @@
             headerAdm.style.display = isAdmin ? "table-cell" : "none";
             tbody.innerHTML = "";
             
-            // MUDANÇA: Em vez de pegar todas as turmas do banco, 
-            // pegamos apenas as que estão no objeto statusTurmas e tem status > 0
             const turmasAtivas = Object.keys(statusTurmas).filter(t => statusTurmas[t].status > 0).sort();
 
             if (turmasAtivas.length === 0) {
@@ -863,49 +883,35 @@
         }
 
         function alterarStatus(turma, direcao) {
-            // Prevenção de erro
             if (!statusTurmas[turma]) return; 
             
             let novoStatus = statusTurmas[turma].status + direcao;
             
-            // LÓGICA NOVA: Se voltar para 0 (Não Iniciado) ou menos, REMOVE da lista
-            if (novoStatus <= 0) {
-                delete statusTurmas[turma]; // Apaga do objeto
+            if (novoStatus <= 0 || novoStatus >= ESTADOS.length) {
+                delete statusTurmas[turma];
                 localStorage.setItem('statusSolicitacoes', JSON.stringify(statusTurmas));
-                abrirDashboard(); // Recarrega a tela (a linha vai sumir)
+                abrirDashboard();
                 return;
             }
 
-            // Se passar do último status (4), vamos assumir que zera e some também?
-            // Ou trava no último? Vou configurar para zerar e sumir (ciclo completo).
-            if (novoStatus >= ESTADOS.length) {
-                 delete statusTurmas[turma];
-                 localStorage.setItem('statusSolicitacoes', JSON.stringify(statusTurmas));
-                 abrirDashboard();
-                 return;
-            }
-
-            // Se for um status normal (1, 2, 3, 4), atualiza
             statusTurmas[turma].status = novoStatus;
-            statusTurmas[turma].data = new Date().toLocaleString(); // Atualiza hora
+            statusTurmas[turma].data = new Date().toLocaleString(); 
 
             localStorage.setItem('statusSolicitacoes', JSON.stringify(statusTurmas));
             abrirDashboard();
         }
 
-        // ======================== PAINEL ADMIN (ATUALIZADO) ========================
+        // ======================== PAINEL ADMIN ========================
         function abrirAdminPanel() {
             if(!isAdmin) return;
             document.getElementById('adminModal').style.display = 'flex';
             
-            // Carrega Select Principal
             const sel = document.getElementById('admSelectTurma');
             sel.innerHTML = '<option value="">-- Selecione a Turma --</option>';
             Object.keys(bancoAlunos).sort().forEach(t => {
                 let opt = document.createElement('option'); opt.value = t; opt.text = t; sel.appendChild(opt);
             });
 
-            // Reseta visibilidade das seções
             document.getElementById('admClassArea').style.display = 'none';
             document.getElementById('admAddArea').style.display = 'none';
             document.getElementById('admEditContainer').style.display = 'none';
@@ -920,17 +926,11 @@
                 return;
             }
 
-            // Mostra todas as áreas
             areas.forEach(a => a.style.display = 'block');
-            
-            // 1. Preenche Nome
             document.getElementById('admInputTurmaNome').value = turma;
-            
-            // 2. Limpa Inputs de Adicionar
             document.getElementById('admNewNome').value = "";
             document.getElementById('admNewReg').value = "";
 
-            // 3. Carrega Select de Edição
             const selAl = document.getElementById('admSelectAluno');
             selAl.innerHTML = '<option value="">-- Selecione o Aluno --</option>';
             
@@ -943,7 +943,6 @@
                 let opt = document.createElement('option'); opt.text = "(Turma Vazia)"; selAl.appendChild(opt);
                 selAl.disabled = true;
             }
-            // Esconde a área de inputs de edição até selecionar um aluno
             document.getElementById('admEditArea').style.display = 'none';
         }
 
@@ -967,7 +966,7 @@
                 
                 localStorage.setItem('db_alunos_v2', JSON.stringify(bancoAlunos));
                 alert("Turma renomeada!");
-                abrirAdminPanel(); // Reinicia modal
+                abrirAdminPanel(); 
             }
         }
 
@@ -979,7 +978,7 @@
                     bancoAlunos[turma] = [];
                     localStorage.setItem('db_alunos_v2', JSON.stringify(bancoAlunos));
                     alert("Turma esvaziada.");
-                    admCarregarTurmaEAlunos(); // Atualiza UI
+                    admCarregarTurmaEAlunos(); 
                 }
             }
         }
@@ -991,15 +990,13 @@
             const reg = document.getElementById('admNewReg').value.trim();
 
             if(!nome || !reg) return alert("Preencha Nome e Matrícula.");
-
-            // Cria array se não existir (caso raro de turma nova vazia)
             if(!bancoAlunos[turma]) bancoAlunos[turma] = [];
 
             bancoAlunos[turma].push({ nome: nome, codigo: reg });
             localStorage.setItem('db_alunos_v2', JSON.stringify(bancoAlunos));
             
             alert("Aluno Adicionado!");
-            admCarregarTurmaEAlunos(); // Atualiza UI e limpa inputs
+            admCarregarTurmaEAlunos(); 
         }
 
         // --- FUNÇÃO 4: EDITAR ALUNO ---
@@ -1027,6 +1024,86 @@
             
             alert("Dados atualizados!");
             admCarregarTurmaEAlunos();
+        }
+
+        // --- FUNÇÃO 5: AVANÇAR SEMESTRE GLOBAL ---
+        function admAvancarSemestreGlobal() {
+            if(!confirm("⚠️ ATENÇÃO: Isso irá avançar o semestre de TODAS as turmas cadastradas. Turmas do 4º semestre voltarão para o 1º semestre e TODOS os alunos delas serão apagados. Deseja continuar?")) {
+                return;
+            }
+
+            // 1. SALVAR BACKUP ANTES DE ALTERAR
+            localStorage.setItem('db_alunos_backup', JSON.stringify(bancoAlunos));
+            localStorage.setItem('statusSolicitacoes_backup', JSON.stringify(statusTurmas));
+
+            let novoBanco = {};
+            const regex = /^([a-zA-Z]+)(\d+)([a-zA-Z]*)$/; 
+
+            for (let turma in bancoAlunos) {
+                let match = turma.match(regex);
+                
+                if (match) {
+                    let prefixo = match[1];
+                    let num = parseInt(match[2]);
+                    let sufixo = match[3];
+
+                    let novoNum = num + 1;
+                    let novosAlunos = bancoAlunos[turma]; 
+
+                    if (num >= 4) {
+                        novoNum = 1;
+                        novosAlunos = []; 
+                    }
+
+                    let novaTurma = `${prefixo}${novoNum}${sufixo}`;
+                    novoBanco[novaTurma] = novosAlunos;
+                } else {
+                    novoBanco[turma] = bancoAlunos[turma];
+                }
+            }
+
+            // 2. ATUALIZAR BANCO PRINCIPAL
+            bancoAlunos = novoBanco;
+            localStorage.setItem('db_alunos_v2', JSON.stringify(bancoAlunos));
+            
+            statusTurmas = {};
+            localStorage.setItem('statusSolicitacoes', JSON.stringify(statusTurmas));
+
+            alert("✅ Semestre avançado com sucesso! Um backup do estado anterior foi criado.");
+            
+            fecharModais();
+            abrirAdminPanel();
+            carregarTurmas(); 
+        }
+
+        // --- FUNÇÃO 6: DESFAZER O AVANÇO ---
+        function admDesfazerAvancoSemestre() {
+            const backupAlunos = localStorage.getItem('db_alunos_backup');
+            const backupStatus = localStorage.getItem('statusSolicitacoes_backup');
+
+            if (!backupAlunos) {
+                alert("❌ Nenhum backup encontrado! Não há ação para desfazer.");
+                return;
+            }
+
+            if(!confirm("🔄 RESTAURAÇÃO: Tem certeza que deseja desfazer o último avanço de semestre? Isso fará as turmas e os status retornarem exatamente como estavam antes.")) {
+                return;
+            }
+
+            bancoAlunos = JSON.parse(backupAlunos);
+            statusTurmas = backupStatus ? JSON.parse(backupStatus) : {};
+
+            localStorage.setItem('db_alunos_v2', JSON.stringify(bancoAlunos));
+            localStorage.setItem('statusSolicitacoes', JSON.stringify(statusTurmas));
+
+            localStorage.removeItem('db_alunos_backup');
+            localStorage.removeItem('statusSolicitacoes_backup');
+
+            alert("✅ Restauração concluída! Os dados voltaram ao estado anterior.");
+            
+            fecharModais();
+            abrirAdminPanel();
+            carregarTurmas(); 
         }
 
         function fecharModais() {
